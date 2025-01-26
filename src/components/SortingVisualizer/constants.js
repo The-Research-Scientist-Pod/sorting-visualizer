@@ -13,8 +13,9 @@ export const ALGORITHMS = {
     HEAP_SORT: 'Heap Sort',
     COCKTAIL_SORT: 'Cocktail Sort',
     RADIX_SORT: 'Radix Sort',
-    COMB_SORT: 'Comb Sort'
-
+    COMB_SORT: 'Comb Sort',
+    TIM_SORT: 'Tim Sort',
+    INTRO_SORT: 'Intro Sort',
 };
 
 export const BUTTON_STATES = {

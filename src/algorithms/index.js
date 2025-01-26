@@ -8,4 +8,7 @@ export { HeapSort } from './heapSort';
 export { CocktailSort } from './cocktailSort';
 export { RadixSort} from './radixSort';
 export { CombSort } from './combSort';
+export { TimSort } from './timSort';
+export { IntroSort } from './introSort';
+
 // Export additional algorithms as they're implemented
