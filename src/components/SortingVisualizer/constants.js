@@ -19,6 +19,11 @@ export const ALGORITHMS = {
     PANCAKE_SORT: 'Pancake Sort',
     GNOME_SORT: 'Gnome Sort',
     BOGO_SORT: 'Bogo Sort',
+    COUNTING_SORT: 'Counting Sort',
+    BINARY_INSERTION_SORT: 'Binary Insertion Sort',
+    THREE_WAY_QUICK_SORT: 'Three Way Quick Sort',
+    DUAL_PIVOT_QUICK_SORT: 'Dual Pivot Quick Sort',
+
 };
 
 export const BUTTON_STATES = {
