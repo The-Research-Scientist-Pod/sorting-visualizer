@@ -25,6 +25,7 @@ const SortingVisualizer = () => {
     const [isComplete, setIsComplete] = useState(false);
     const [isSoundEnabled, setIsSoundEnabled] = useState(false);
     const [pauseText, setPauseText] = useState('Pause');
+    const [isUniformHeight, setIsUniformHeight] = useState(false);
 
     // Refs
     const isPaused = useRef(false);
@@ -72,6 +73,13 @@ const SortingVisualizer = () => {
         }
         const hue = (value / arraySize) * 360;
         return `hsl(${hue}, 100%, 50%)`;
+    };
+
+    const getHeight = (value) => {
+        if (isUniformHeight) {
+            return '100%';
+        }
+        return `${(value / arraySize) * 100}%`;
     };
 
     const calculateDelay = (speed) => {
@@ -198,6 +206,14 @@ const SortingVisualizer = () => {
                     >
                         Sound {isSoundEnabled ? 'On' : 'Off'}
                     </Button>
+                    <Button
+                        onClick={() => setIsUniformHeight(!isUniformHeight)}
+                        className={`${
+                            isUniformHeight ? 'bg-purple-500 hover:bg-purple-600' : 'bg-indigo-500 hover:bg-indigo-600'
+                        }`}
+                    >
+                        {isUniformHeight ? 'Bar Mode' : 'Mountain Mode'}
+                    </Button>
                 </div>
                 <div className="flex flex-col gap-4 min-w-[300px]">
                     {/* Size control */}
@@ -276,13 +292,13 @@ const SortingVisualizer = () => {
             )}
 
             {/* Visualization section */}
-            <div className="h-96 bg-gray-100 rounded-lg flex">
+            <div className="h-96 bg-gray-100 rounded-lg flex items-end">
                 {array.map((value, idx) => (
                     <div
                         key={idx}
                         style={{
                             width: `${100 / arraySize}%`,
-                            height: '100%',
+                            height: getHeight(value),
                             backgroundColor: getColor(value, idx),
                             display: 'inline-block',
                             transition: 'background-color 0.1s ease',
