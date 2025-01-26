@@ -10,5 +10,5 @@ export { RadixSort} from './radixSort';
 export { CombSort } from './combSort';
 export { TimSort } from './timSort';
 export { IntroSort } from './introSort';
-
+export { PancakeSort } from './pancakeSort';
 // Export additional algorithms as they're implemented

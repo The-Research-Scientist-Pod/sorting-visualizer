@@ -16,6 +16,7 @@ export const ALGORITHMS = {
     COMB_SORT: 'Comb Sort',
     TIM_SORT: 'Tim Sort',
     INTRO_SORT: 'Intro Sort',
+    PANCAKE_SORT: 'Pancake Sort',
 };
 
 export const BUTTON_STATES = {
