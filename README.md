@@ -1,7 +1,3 @@
-Here’s an improved and polished version of your README.md with emoticons, a contextual reference to your website, and an overall more engaging and professional tone:
-
----
-
 # 🎨 Sorting Algorithm Visualizer
 
 A dynamic and interactive tool for visualizing the inner workings of various sorting algorithms, built with **React**. Watch algorithms come to life with real-time animations and intuitive controls!
