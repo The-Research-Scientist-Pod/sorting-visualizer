@@ -1,6 +1,6 @@
 # 🎨 Sorting Algorithm Visualizer
 
-A dynamic and interactive tool for visualizing the inner workings of various sorting algorithms, built with **React**. Watch algorithms come to life with real-time animations and intuitive controls!
+A dynamic and interactive tool for visualizing the inner workings of various sorting algorithms, built with **Vite + React**. Watch algorithms come to life with real-time animations and intuitive controls!
 
 ---
 
@@ -40,10 +40,10 @@ Ensure you have the following installed:
 
 3. **Start the Development Server**  
    ```bash
-   npm start
+   npm run dev
    ```
 
-   The application will open in your default browser at `http://localhost:3000`.
+   The application will open in your default browser, typically at `http://localhost:5173`.
 
 ---
 
@@ -57,10 +57,10 @@ Ensure you have the following installed:
 
 ## 📜 Available Scripts
 
-- **`npm start`**: Start the development server 🚀  
-- **`npm build`**: Build the project for production 🏗  
+- **`npm run dev`**: Start the development server 🚀  
+- **`npm run build`**: Build the project for production 🏗  
+- **`npm run preview`**: Preview the production build locally 🔍  
 - **`npm test`**: Run the test suite ✅  
-- **`npm eject`**: Eject from Create React App 🔧
 
 ---
 
@@ -99,6 +99,4 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ---
 
-Feel free to suggest further improvements or share your thoughts. 
-
----
+Feel free to suggest further improvements or share your thoughts. Let’s make sorting visual and fun! 🚀🌟
