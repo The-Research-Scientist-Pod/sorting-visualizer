@@ -11,4 +11,7 @@ export { CombSort } from './combSort';
 export { TimSort } from './timSort';
 export { IntroSort } from './introSort';
 export { PancakeSort } from './pancakeSort';
+export { GnomeSort } from './gnomeSort';
+export { BogoSort } from './bogoSort';
+
 // Export additional algorithms as they're implemented

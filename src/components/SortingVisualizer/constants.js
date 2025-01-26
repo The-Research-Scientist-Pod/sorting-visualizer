@@ -17,6 +17,8 @@ export const ALGORITHMS = {
     TIM_SORT: 'Tim Sort',
     INTRO_SORT: 'Intro Sort',
     PANCAKE_SORT: 'Pancake Sort',
+    GNOME_SORT: 'Gnome Sort',
+    BOGO_SORT: 'Bogo Sort',
 };
 
 export const BUTTON_STATES = {
