@@ -18,8 +18,6 @@ const SortingVisualizer = () => {
     const [isSorting, setIsSorting] = useState(false);
     const [speed, setSpeed] = useState(DEFAULT_SPEED);
     const [selectedAlgorithm, setSelectedAlgorithm] = useState(ALGORITHMS.BUBBLE_SORT);
-
-    // Completion state
     const [isComplete, setIsComplete] = useState(false);
 
     // Refs
@@ -29,27 +27,23 @@ const SortingVisualizer = () => {
     const [pauseText, setPauseText] = useState('Pause');
 
     useEffect(() => {
-        resetToRainbow();
+        setArray([...INITIAL_RAINBOW]);
         return () => {
             isCancelled.current = true;
         };
     }, []);
 
     const getColor = (value, index) => {
-        // If this index is being compared, reduce opacity
         if (currentIndices.includes(index)) {
             const hue = (value / ARRAY_SIZE) * 360;
             return `hsla(${hue}, 100%, 50%, 0.7)`;
         }
-
         const hue = (value / ARRAY_SIZE) * 360;
         return `hsl(${hue}, 100%, 50%)`;
     };
 
     const calculateDelay = (speed) => {
-        // Adjust base delay for larger array size
-        const baseDelay = 500; // Increased base delay for better visibility
-        // Use a different exponential base for smoother speed transitions
+        const baseDelay = 500;
         return Math.max(0, Math.floor(baseDelay * Math.pow(0.97, speed)));
     };
 
@@ -63,23 +57,8 @@ const SortingVisualizer = () => {
             onSwap: (newArray) => setArray([...newArray])
         };
 
-        // Use the imported algorithms object
         const Algorithm = SortingAlgorithms[selectedAlgorithm.replace(/\s+/g, '')];
         return new Algorithm(config);
-    };
-
-    const resetToRainbow = () => {
-        isCancelled.current = true;
-        setArray([...INITIAL_RAINBOW]);
-        setCurrentIndices([]);
-        setIsSorting(false);
-        isPaused.current = false;
-        setPauseText('Pause');
-        setIsComplete(false);
-
-        setTimeout(() => {
-            isCancelled.current = false;
-        }, 100);
     };
 
     const shuffleArray = () => {
@@ -100,7 +79,6 @@ const SortingVisualizer = () => {
     };
 
     const startSort = async () => {
-        // Don't start sorting if array is already in initial rainbow state
         if ((isSorting && !isPaused.current) || array.every((value, index) => value === INITIAL_RAINBOW[index])) {
             return;
         }
@@ -116,7 +94,6 @@ const SortingVisualizer = () => {
             const sortedArray = await currentSorter.current.sort([...array]);
 
             if (!isCancelled.current) {
-                // Ensure the array is actually sorted
                 const isSorted = sortedArray.every((val, idx) =>
                     idx === 0 || sortedArray[idx - 1] <= val
                 );
@@ -133,7 +110,11 @@ const SortingVisualizer = () => {
         } catch (error) {
             console.error('Sorting error:', error);
             if (error.message !== 'Sorting cancelled') {
-                resetToRainbow();
+                setArray([...INITIAL_RAINBOW]);
+                setIsSorting(false);
+                isPaused.current = false;
+                setPauseText('Pause');
+                setCurrentIndices([]);
             }
         }
     };
@@ -185,13 +166,6 @@ const SortingVisualizer = () => {
 
             {/* Control buttons section */}
             <div className="mb-4 flex gap-4">
-                <Button
-                    onClick={resetToRainbow}
-                    disabled={!isSorting && array.every((value, index) => value === INITIAL_RAINBOW[index])}
-                    className="bg-blue-500 hover:bg-blue-600"
-                >
-                    Reset to Rainbow
-                </Button>
                 <Button
                     onClick={shuffleArray}
                     disabled={isSorting}

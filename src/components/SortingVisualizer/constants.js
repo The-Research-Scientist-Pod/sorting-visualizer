@@ -9,7 +9,12 @@ export const ALGORITHMS = {
     MERGE_SORT: 'Merge Sort',
     INSERTION_SORT: 'Insertion Sort',
     SELECTION_SORT: 'Selection Sort',
-    // Add more algorithms here as they're implemented
+    SHELL_SORT: 'Shell Sort',
+    HEAP_SORT: 'Heap Sort',
+    COCKTAIL_SORT: 'Cocktail Sort',
+    RADIX_SORT: 'Radix Sort',
+    COMB_SORT: 'Comb Sort'
+
 };
 
 export const BUTTON_STATES = {
