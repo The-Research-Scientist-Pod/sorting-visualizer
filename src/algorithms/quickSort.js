@@ -1,12 +1,11 @@
 import {SortingAlgorithm} from "@/algorithms/base.js";
 
 export class QuickSort extends SortingAlgorithm {
-    constructor(config) {
-        super(config);
-    }
-
     async sort(array) {
         try {
+            if (this.isCancelled?.current) {
+                throw new Error('Sorting cancelled');
+            }
             await this.quickSort(array, 0, array.length - 1);
             return array;
         } catch (error) {
@@ -18,57 +17,60 @@ export class QuickSort extends SortingAlgorithm {
     }
 
     async quickSort(array, low, high) {
+        // Check cancelled state at each recursive call
+        if (this.isCancelled?.current) {
+            throw new Error('Sorting cancelled');
+        }
+
         if (low < high) {
-            await this.checkState();
+            // Always check if cancelled before each major operation
+            if (this.isCancelled?.current) {
+                throw new Error('Sorting cancelled');
+            }
+
             const pivotIndex = await this.partition(array, low, high);
+
+            if (this.isCancelled?.current) {
+                throw new Error('Sorting cancelled');
+            }
+
             await this.quickSort(array, low, pivotIndex - 1);
+
+            if (this.isCancelled?.current) {
+                throw new Error('Sorting cancelled');
+            }
+
             await this.quickSort(array, pivotIndex + 1, high);
         }
     }
 
     async partition(array, low, high) {
-        const pivot = array[high];
+        if (this.isCancelled?.current) {
+            throw new Error('Sorting cancelled');
+        }
+
         let i = low - 1;
 
         for (let j = low; j < high; j++) {
-            await this.checkState();
-            await this.compare(array, j, high);
+            if (this.isCancelled?.current) {
+                throw new Error('Sorting cancelled');
+            }
 
-            if (array[j] < pivot) {
+            // Use compare which includes its own state checks
+            if (await this.compare(array, j, high)) {
                 i++;
+                if (this.isCancelled?.current) {
+                    throw new Error('Sorting cancelled');
+                }
                 this.swap(array, i, j);
-                this.onStep?.(array);
             }
         }
 
+        if (this.isCancelled?.current) {
+            throw new Error('Sorting cancelled');
+        }
+
         this.swap(array, i + 1, high);
-        this.onStep?.(array);
         return i + 1;
-    }
-
-    async checkState() {
-        if (this.isCancelled?.current) {
-            throw new Error('Sorting cancelled');
-        }
-
-        while (this.isPaused?.current && !this.isCancelled?.current) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
-        if (this.isCancelled?.current) {
-            throw new Error('Sorting cancelled');
-        }
-    }
-
-    async compare(array, i, j) {
-        await this.checkState();
-        this.onCompare?.(i, j);
-        await new Promise(resolve => setTimeout(resolve, this.delay));
-        return array[i] > array[j];
-    }
-
-    swap(array, i, j) {
-        [array[i], array[j]] = [array[j], array[i]];
-        this.onSwap?.(array);
     }
 }

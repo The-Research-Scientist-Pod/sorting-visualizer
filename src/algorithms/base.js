@@ -1,40 +1,46 @@
+import { AudioHelper } from './audioHelper';
+
 export class SortingAlgorithm {
-    constructor(config) {
-        this.delay = config.delay || 100;
-        this.isPaused = config.isPaused || { current: false };
-        this.onStep = config.onStep || (() => {});
-        this.onCompare = config.onCompare || (() => {});
-        this.onSwap = config.onSwap || (() => {});
+    constructor({ delay, isPaused, isCancelled, onStep, onCompare, onSwap, isSoundEnabled }) {
+        this.delay = delay;
+        this.isPaused = isPaused;
+        this.isCancelled = isCancelled;
+        this.onStep = onStep;
+        this.onCompare = onCompare;
+        this.onSwap = onSwap;
+        this.isSoundEnabled = isSoundEnabled;
+        this.audioHelper = new AudioHelper();
     }
 
-    async sleep() {
-        return new Promise(resolve => {
-            const check = () => {
-                if (!this.isPaused.current) {
-                    setTimeout(resolve, this.delay);
-                } else {
-                    setTimeout(check, 100);
-                }
-            };
-            check();
-        });
+    async checkState() {
+        if (this.isCancelled?.current) {
+            throw new Error('Sorting cancelled');
+        }
+
+        while (this.isPaused?.current && !this.isCancelled?.current) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        if (this.isCancelled?.current) {
+            throw new Error('Sorting cancelled');
+        }
     }
 
-    // Helper method to swap elements and notify visualization
-    swap(array, i, j) {
-        [array[i], array[j]] = [array[j], array[i]];
-        this.onSwap(array);
-    }
-
-    // Helper method to compare elements and notify visualization
     async compare(array, i, j) {
-        this.onCompare(i, j);
-        await this.sleep();
+        await this.checkState();
+        this.onCompare?.(i, j);
+        if (this.isSoundEnabled?.current) {
+            this.audioHelper.createCompareSound();
+        }
+        await new Promise(resolve => setTimeout(resolve, this.delay));
         return array[i] > array[j];
     }
 
-    // Abstract method that must be implemented by concrete sorting algorithms
-    async sort() {  // Removed unused parameter
-        throw new Error('sort() method must be implemented');
+    swap(array, i, j) {
+        [array[i], array[j]] = [array[j], array[i]];
+        this.onSwap?.(array);
+        if (this.isSoundEnabled?.current) {
+            this.audioHelper.createSwapSound();
+        }
     }
 }

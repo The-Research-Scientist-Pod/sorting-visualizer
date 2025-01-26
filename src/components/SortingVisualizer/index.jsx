@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/button';
 import * as SortingAlgorithms from '@/algorithms/index.js';
 import {
     ARRAY_SIZE,
@@ -26,10 +26,13 @@ const SortingVisualizer = () => {
     const isPaused = useRef(false);
     const isCancelled = useRef(false);
     const currentSorter = useRef(null);
+    // Sound state
+    const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+    const soundEnabledRef = useRef(true);
     const [pauseText, setPauseText] = useState('Pause');
 
     useEffect(() => {
-        resetToRainbow();
+        setArray([...INITIAL_RAINBOW]);
         return () => {
             isCancelled.current = true;
         };
@@ -46,6 +49,42 @@ const SortingVisualizer = () => {
         return `hsl(${hue}, 100%, 50%)`;
     };
 
+    const playCompareSound = () => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Higher pitch for comparisons
+
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+    };
+
+    const playSwapSound = () => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // Lower pitch for swaps
+
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+    };
+
     const calculateDelay = (speed) => {
         // Adjust base delay for larger array size
         const baseDelay = 500; // Increased base delay for better visibility
@@ -59,27 +98,23 @@ const SortingVisualizer = () => {
             isPaused,
             isCancelled,
             onStep: (newArray) => setArray([...newArray]),
-            onCompare: (i, j) => setCurrentIndices([i, j]),
-            onSwap: (newArray) => setArray([...newArray])
+            onCompare: (i, j) => {
+                setCurrentIndices([i, j]);
+                if (soundEnabledRef.current) {
+                    playCompareSound();
+                }
+            },
+            onSwap: (newArray) => {
+                setArray([...newArray]);
+                if (soundEnabledRef.current) {
+                    playSwapSound();
+                }
+            }
         };
 
         // Use the imported algorithms object
         const Algorithm = SortingAlgorithms[selectedAlgorithm.replace(/\s+/g, '')];
         return new Algorithm(config);
-    };
-
-    const resetToRainbow = () => {
-        isCancelled.current = true;
-        setArray([...INITIAL_RAINBOW]);
-        setCurrentIndices([]);
-        setIsSorting(false);
-        isPaused.current = false;
-        setPauseText('Pause');
-        setIsComplete(false);
-
-        setTimeout(() => {
-            isCancelled.current = false;
-        }, 100);
     };
 
     const shuffleArray = () => {
@@ -133,7 +168,11 @@ const SortingVisualizer = () => {
         } catch (error) {
             console.error('Sorting error:', error);
             if (error.message !== 'Sorting cancelled') {
-                resetToRainbow();
+                setArray([...INITIAL_RAINBOW]);
+                setIsSorting(false);
+                isPaused.current = false;
+                setPauseText('Pause');
+                setCurrentIndices([]);
             }
         }
     };
@@ -147,7 +186,7 @@ const SortingVisualizer = () => {
     return (
         <div className="p-4 w-full max-w-4xl mx-auto">
             {/* Algorithm selection and speed control section */}
-            <div className="mb-2 flex gap-4 justify-between">
+            <div className="mb-2 flex gap-4 justify-between items-center">
                 <select
                     value={selectedAlgorithm}
                     onChange={(e) => {
@@ -181,17 +220,20 @@ const SortingVisualizer = () => {
                         {calculateDelay(speed)}ms
                     </span>
                 </div>
+                <Button
+                    onClick={() => {
+                        setIsSoundEnabled(!isSoundEnabled);
+                        soundEnabledRef.current = !soundEnabledRef.current;
+                    }}
+                    disabled={isSorting && !isPaused.current}
+                    className={isSoundEnabled ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-500 hover:bg-gray-600"}
+                >
+                    Sound {isSoundEnabled ? 'On' : 'Off'}
+                </Button>
             </div>
 
             {/* Control buttons section */}
             <div className="mb-4 flex gap-4">
-                <Button
-                    onClick={resetToRainbow}
-                    disabled={!isSorting && array.every((value, index) => value === INITIAL_RAINBOW[index])}
-                    className="bg-blue-500 hover:bg-blue-600"
-                >
-                    Reset to Rainbow
-                </Button>
                 <Button
                     onClick={shuffleArray}
                     disabled={isSorting}

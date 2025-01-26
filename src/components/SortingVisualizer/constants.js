@@ -9,6 +9,10 @@ export const ALGORITHMS = {
     MERGE_SORT: 'Merge Sort',
     INSERTION_SORT: 'Insertion Sort',
     SELECTION_SORT: 'Selection Sort',
+    HEAP_SORT: 'Heap Sort',
+    SHELL_SORT: 'Shell Sort',
+    COCKTAIL_SORT: 'Cocktail Sort',
+
     // Add more algorithms here as they're implemented
 };
 
