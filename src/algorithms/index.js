@@ -16,6 +16,7 @@ export { BogoSort } from './bogoSort';
 export { CountingSort } from './countingSort';
 export { BinaryInsertionSort } from './binaryInsertionSort';
 export { ThreeWayQuickSort } from './threeWayQuickSort';
-export { DualPivotQuickSort } from './dualPivotQuickSort.js';
-
+export { DualPivotQuickSort } from './dualPivotQuickSort';
+export { StoogeSort } from './stoogeSort';
+export { OddEvenSort } from './oddEvenSort'
 // Export additional algorithms as they're implemented

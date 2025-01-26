@@ -23,7 +23,8 @@ export const ALGORITHMS = {
     BINARY_INSERTION_SORT: 'Binary Insertion Sort',
     THREE_WAY_QUICK_SORT: 'Three Way Quick Sort',
     DUAL_PIVOT_QUICK_SORT: 'Dual Pivot Quick Sort',
-
+    STOOGE_SORT: 'Stooge Sort',
+    ODD_EVEN_SORT: 'Odd Even Sort',
 };
 
 export const BUTTON_STATES = {
