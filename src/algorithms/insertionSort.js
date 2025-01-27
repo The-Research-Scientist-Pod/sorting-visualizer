@@ -1,4 +1,4 @@
-import {SortingAlgorithm} from "@/algorithms/base.js";
+import { SortingAlgorithm } from "@/algorithms/base.js";
 
 export class InsertionSort extends SortingAlgorithm {
     constructor(config) {
@@ -12,63 +12,51 @@ export class InsertionSort extends SortingAlgorithm {
             for (let i = 1; i < n; i++) {
                 await this.checkState();
 
-                let key = array[i];
+                const key = array[i];
                 let j = i - 1;
 
-                // Compare the current element with previous elements
-                while (j >= 0) {
-                    await this.checkState();
-
-                    // Visualize comparison
-                    await this.compare(array, j, j + 1);
-
-                    if (array[j] > key) {
-                        // Move elements forward
-                        array[j + 1] = array[j];
-                        this.onStep?.(array);
-                        j--;
-                    } else {
-                        break;
-                    }
+                // Compare and shift elements
+                while (j >= 0 && (await this.compare(array, j, j + 1))) {
+                    array[j + 1] = array[j];
+                    j--;
+                    this.onStep?.([...array]); // Visualize shifting
                 }
 
-                // Place the key in its correct position
+                // Insert the key at the correct position
                 array[j + 1] = key;
-                this.onStep?.(array);
+                this.onStep?.([...array]); // Visualize the updated array
             }
 
             return array;
         } catch (error) {
-            if (error.message === 'Sorting cancelled') {
-                return array;
+            if (error.message === "Sorting cancelled") {
+                return array; // Graceful handling
             }
             throw error;
         }
     }
 
     async checkState() {
+        // Check if sorting is canceled
         if (this.isCancelled?.current) {
-            throw new Error('Sorting cancelled');
+            throw new Error("Sorting cancelled");
         }
 
+        // Pause execution if paused
         while (this.isPaused?.current && !this.isCancelled?.current) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
 
+        // Check again for cancellation after unpausing
         if (this.isCancelled?.current) {
-            throw new Error('Sorting cancelled');
+            throw new Error("Sorting cancelled");
         }
     }
 
     async compare(array, i, j) {
         await this.checkState();
-        this.onCompare?.(i, j);
-        await new Promise(resolve => setTimeout(resolve, this.delay));
+        this.onCompare?.(i, j); // Visualize the comparison
+        await new Promise(resolve => setTimeout(resolve, this.delay || 100)); // Delay for visualization
         return array[i] > array[j];
-    }
-
-    swap(array, i, j) {
-        [array[i], array[j]] = [array[j], array[i]];
-        this.onSwap?.(array);
     }
 }

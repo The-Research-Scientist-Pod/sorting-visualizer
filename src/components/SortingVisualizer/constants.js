@@ -25,6 +25,7 @@ export const ALGORITHMS = {
     DUAL_PIVOT_QUICK_SORT: 'Dual Pivot Quick Sort',
     STOOGE_SORT: 'Stooge Sort',
     ODD_EVEN_SORT: 'Odd Even Sort',
+    PIGEONHOLE_SORT: 'Pigeonhole Sort',
 };
 
 export const BUTTON_STATES = {

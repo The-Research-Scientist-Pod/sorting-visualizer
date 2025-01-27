@@ -1,20 +1,19 @@
-import {SortingAlgorithm} from "@/algorithms/base.js";
+import { SortingAlgorithm } from "@/algorithms/base.js";
 
 export class RadixSort extends SortingAlgorithm {
     async sort(array) {
         try {
-            // Find the maximum number to know number of digits
             let max = Math.max(...array);
 
-            // Do counting sort for every digit
+            // Perform counting sort for each digit (1s, 10s, 100s, ...)
             for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
                 await this.countingSort(array, exp);
             }
 
             return array;
         } catch (error) {
-            if (error.message === 'Sorting cancelled') {
-                return array;
+            if (error.message === "Sorting cancelled") {
+                return array; // Allow graceful cancellation
             }
             throw error;
         }
@@ -25,34 +24,39 @@ export class RadixSort extends SortingAlgorithm {
         const output = new Array(n);
         const count = new Array(10).fill(0);
 
-        // Store count of occurrences in count[]
+        // Count occurrences of digits
         for (let i = 0; i < n; i++) {
+            await this.sleep();
             const digit = Math.floor(array[i] / exp) % 10;
             count[digit]++;
-            await this.compare(array, i, i); // Visualize current element being counted
+            this.onCompare?.(i, digit); // Visualize count phase
         }
 
-        // Change count[i] so that count[i] now contains actual
-        // position of this digit in output[]
+        // Calculate positions
         for (let i = 1; i < 10; i++) {
             count[i] += count[i - 1];
         }
 
         // Build the output array
         for (let i = n - 1; i >= 0; i--) {
+            await this.sleep();
             const digit = Math.floor(array[i] / exp) % 10;
-            output[count[digit] - 1] = array[i];
+            const position = count[digit] - 1;
+            output[position] = array[i];
             count[digit]--;
 
-            // Update visualization
-            await this.compare(array, i, count[digit]); // Show element being placed
+            // Visualize movement
+            this.onCompare?.(i, position);
+            this.onSwap?.([...output]); // Show progress of building output
         }
 
-        // Copy the output array to array[], so that array[] now
-        // contains sorted numbers according to current digit
+        // Copy output back to the original array
         for (let i = 0; i < n; i++) {
+            await this.sleep();
             array[i] = output[i];
-            this.onStep?.(array);
+
+            // Visualize the updated array
+            this.onSwap?.([...array]);
         }
 
         return array;

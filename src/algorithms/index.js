@@ -19,4 +19,5 @@ export { ThreeWayQuickSort } from './threeWayQuickSort';
 export { DualPivotQuickSort } from './dualPivotQuickSort';
 export { StoogeSort } from './stoogeSort';
 export { OddEvenSort } from './oddEvenSort'
+export { PigeonholeSort } from './pigeonholeSort'
 // Export additional algorithms as they're implemented

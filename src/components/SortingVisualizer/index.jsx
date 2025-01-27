@@ -14,6 +14,13 @@ const MIN_SIZE = 10;
 const MAX_SIZE = 500;
 const DEFAULT_SIZE = 200;
 
+// Visualization modes
+const VISUALIZATION_MODES = {
+    MOUNTAIN: 'Mountain Mode',
+    BAR: 'Bar Mode',
+    CIRCLE: 'Circle Mode'
+};
+
 const SortingVisualizer = () => {
     // State management
     const [arraySize, setArraySize] = useState(DEFAULT_SIZE);
@@ -25,7 +32,7 @@ const SortingVisualizer = () => {
     const [isComplete, setIsComplete] = useState(false);
     const [isSoundEnabled, setIsSoundEnabled] = useState(false);
     const [pauseText, setPauseText] = useState('Pause');
-    const [isUniformHeight, setIsUniformHeight] = useState(false);
+    const [visualizationMode, setVisualizationMode] = useState(VISUALIZATION_MODES.MOUNTAIN);
 
     // Refs
     const isPaused = useRef(false);
@@ -76,10 +83,27 @@ const SortingVisualizer = () => {
     };
 
     const getHeight = (value) => {
-        if (isUniformHeight) {
+        if (visualizationMode === VISUALIZATION_MODES.BAR) {
             return '100%';
         }
         return `${(value / arraySize) * 100}%`;
+    };
+
+    const getRadialBarStyles = (index, value, totalElements) => {
+        // Calculate degree for this bar
+        const degree = (index / totalElements) * 360;
+
+        return {
+            position: 'absolute',
+            height: '40%', // Fixed length for bars
+            width: '2px', // Thin fixed width for bars
+            backgroundColor: getColor(value, index),
+            transformOrigin: 'bottom center',
+            left: '50%',
+            bottom: '50%',
+            transform: `rotate(${degree}deg)`,
+            transition: 'background-color 0.1s ease',
+        };
     };
 
     const calculateDelay = (speed) => {
@@ -177,6 +201,13 @@ const SortingVisualizer = () => {
         setPauseText(isPaused.current ? 'Resume' : 'Pause');
     };
 
+    const cycleVisualizationMode = () => {
+        const modes = Object.values(VISUALIZATION_MODES);
+        const currentIndex = modes.indexOf(visualizationMode);
+        const nextIndex = (currentIndex + 1) % modes.length;
+        setVisualizationMode(modes[nextIndex]);
+    };
+
     return (
         <div className="p-4 w-full max-w-4xl mx-auto">
             {/* Controls section */}
@@ -207,12 +238,10 @@ const SortingVisualizer = () => {
                         Sound {isSoundEnabled ? 'On' : 'Off'}
                     </Button>
                     <Button
-                        onClick={() => setIsUniformHeight(!isUniformHeight)}
-                        className={`${
-                            isUniformHeight ? 'bg-purple-500 hover:bg-purple-600' : 'bg-indigo-500 hover:bg-indigo-600'
-                        }`}
+                        onClick={cycleVisualizationMode}
+                        className="bg-indigo-500 hover:bg-indigo-600"
                     >
-                        {isUniformHeight ? 'Bar Mode' : 'Mountain Mode'}
+                        {visualizationMode}
                     </Button>
                 </div>
                 <div className="flex flex-col gap-4 min-w-[300px]">
@@ -292,20 +321,35 @@ const SortingVisualizer = () => {
             )}
 
             {/* Visualization section */}
-            <div className="h-96 bg-gray-100 rounded-lg flex items-end">
-                {array.map((value, idx) => (
-                    <div
-                        key={idx}
-                        style={{
-                            width: `${100 / arraySize}%`,
-                            height: getHeight(value),
-                            backgroundColor: getColor(value, idx),
-                            display: 'inline-block',
-                            transition: 'background-color 0.1s ease',
-                            opacity: currentIndices.includes(idx) ? '0.7' : '1'
-                        }}
-                    />
-                ))}
+            <div className="h-96 bg-gray-100 rounded-lg relative overflow-hidden">
+                {visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
+                    // Radial visualization with thin bars
+                    <div className="w-full h-full relative transform-gpu">
+                        {array.map((value, idx) => (
+                            <div
+                                key={idx}
+                                style={getRadialBarStyles(idx, value, array.length)}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    // Bar/Mountain visualization
+                    <div className="w-full h-full flex items-end">
+                        {array.map((value, idx) => (
+                            <div
+                                key={idx}
+                                style={{
+                                    width: `${100 / arraySize}%`,
+                                    height: getHeight(value),
+                                    backgroundColor: getColor(value, idx),
+                                    display: 'inline-block',
+                                    transition: 'background-color 0.1s ease',
+                                    opacity: currentIndices.includes(idx) ? '0.7' : '1'
+                                }}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
