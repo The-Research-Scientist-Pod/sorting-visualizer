@@ -21,7 +21,7 @@ const VISUALIZATION_MODES = {
     CIRCLE: 'Circle Mode'
 };
 
-const SortingVisualizer = () => {
+const SortingVisualizer = ({ onDarkModeChange }) => {
     // State management
     const [arraySize, setArraySize] = useState(DEFAULT_SIZE);
     const [array, setArray] = useState([]);
@@ -305,7 +305,11 @@ const SortingVisualizer = () => {
                             {visualizationMode}
                         </Button>
                         <Button
-                            onClick={() => setIsDarkMode(!isDarkMode)}
+                            onClick={() => {
+                                const newMode = !isDarkMode;
+                                setIsDarkMode(newMode);
+                                onDarkModeChange?.(newMode);
+                            }}
                             className={`${isDarkMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-800 hover:bg-gray-900'}`}
                         >
                             {isDarkMode ? '☀️' : '🌙'}
