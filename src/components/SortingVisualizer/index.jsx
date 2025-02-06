@@ -37,9 +37,9 @@ const SortingVisualizer = () => {
         comparisons: 0,
         swaps: 0,
         writes: 0,
-        sortedSegments: 0,
         sortedPercentage: 0
     });
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
     // Refs
     const isPaused = useRef(false);
@@ -136,7 +136,6 @@ const SortingVisualizer = () => {
                 setStats(prev => ({
                     ...prev,
                     writes: prev.writes + 1,
-                    sortedSegments: countSortedSegments(newArray),
                     sortedPercentage: calculateSortedPercentage(newArray)
                 }));
             },
@@ -158,7 +157,6 @@ const SortingVisualizer = () => {
                 setStats(prev => ({
                     ...prev,
                     swaps: prev.swaps + 1,
-                    sortedSegments: countSortedSegments(newArray),
                     sortedPercentage: calculateSortedPercentage(newArray)
                 }));
             }
@@ -248,30 +246,6 @@ const SortingVisualizer = () => {
         setVisualizationMode(modes[nextIndex]);
     };
 
-    const countSortedSegments = (arr) => {
-        let sortedSegments = 0;
-        let totalSegments = 1;
-        let isCurrentSegmentSorted = true;
-        
-        for (let i = 1; i < arr.length; i++) {
-            if (arr[i] < arr[i - 1]) {
-                if (isCurrentSegmentSorted) {
-                    sortedSegments++;
-                }
-                totalSegments++;
-                isCurrentSegmentSorted = true;
-            } else {
-                isCurrentSegmentSorted = isCurrentSegmentSorted && true;
-            }
-        }
-        
-        // Count the last segment if it's sorted
-        if (isCurrentSegmentSorted) {
-            sortedSegments++;
-        }
-        
-        return Math.round((sortedSegments / totalSegments) * 100);
-    };
 
     const calculateSortedPercentage = (arr) => {
         let sortedCount = 0;
@@ -284,7 +258,7 @@ const SortingVisualizer = () => {
     };
 
     return (
-        <div className="p-4 w-full max-w-4xl mx-auto">
+        <div className={`p-4 w-full max-w-4xl mx-auto ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
             {/* Controls section */}
             <div className="mb-2 flex gap-4 justify-between items-start">
                 <div className="flex gap-4">
@@ -322,12 +296,20 @@ const SortingVisualizer = () => {
                             </Button>
                         )}
                     </div>
-                    <Button
-                        onClick={cycleVisualizationMode}
-                        className="bg-indigo-500 hover:bg-indigo-600"
-                    >
-                        {visualizationMode}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={cycleVisualizationMode}
+                            className="bg-indigo-500 hover:bg-indigo-600"
+                        >
+                            {visualizationMode}
+                        </Button>
+                        <Button
+                            onClick={() => setIsDarkMode(!isDarkMode)}
+                            className={`${isDarkMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-800 hover:bg-gray-900'}`}
+                        >
+                            {isDarkMode ? '☀️' : '🌙'}
+                        </Button>
+                    </div>
                 </div>
                 <div className="flex flex-col gap-4 min-w-[300px]">
                     {/* Size control */}
@@ -406,31 +388,27 @@ const SortingVisualizer = () => {
             )}
 
             {/* Stats Panel */}
-            <div className="mb-4 grid grid-cols-5 gap-4 text-sm">
-                <div className="bg-gray-100 p-2 rounded">
+            <div className="mb-4 grid grid-cols-4 gap-4 text-sm">
+                <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Sorted</div>
                     <div>{stats.sortedPercentage}%</div>
                 </div>
-                <div className="bg-gray-100 p-2 rounded">
-                    <div className="font-semibold">Sorted Segments</div>
-                    <div>{stats.sortedSegments}%</div>
-                </div>
-                <div className="bg-gray-100 p-2 rounded">
+                <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Comparisons</div>
                     <div>{stats.comparisons}</div>
                 </div>
-                <div className="bg-gray-100 p-2 rounded">
+                <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Swaps</div>
                     <div>{stats.swaps}</div>
                 </div>
-                <div className="bg-gray-100 p-2 rounded">
+                <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Array Writes</div>
                     <div>{stats.writes}</div>
                 </div>
             </div>
 
             {/* Visualization section */}
-            <div className="h-96 bg-gray-100 rounded-lg relative overflow-hidden">
+            <div className={`h-96 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg relative overflow-hidden`}>
                 {visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
                     // Radial visualization with thin bars
                     <div className="w-full h-full relative transform-gpu">
