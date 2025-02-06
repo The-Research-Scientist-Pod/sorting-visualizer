@@ -270,7 +270,7 @@ const SortingVisualizer = () => {
                             }
                         }}
                         disabled={isSorting}
-                        className="px-3 py-2 border rounded-md text-sm"
+                        className={`px-3 py-2 border rounded-md text-sm ${isDarkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black border-gray-300'}`}
                     >
                         {Object.values(ALGORITHMS).map((algo) => (
                             <option key={algo} value={algo}>
