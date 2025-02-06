@@ -33,6 +33,13 @@ const SortingVisualizer = () => {
     const [isSoundEnabled, setIsSoundEnabled] = useState(false);
     const [pauseText, setPauseText] = useState('Pause');
     const [visualizationMode, setVisualizationMode] = useState(VISUALIZATION_MODES.MOUNTAIN);
+    const [stats, setStats] = useState({
+        comparisons: 0,
+        swaps: 0,
+        writes: 0,
+        sortedSegments: 0,
+        sortedPercentage: 0
+    });
 
     // Refs
     const isPaused = useRef(false);
@@ -124,18 +131,36 @@ const SortingVisualizer = () => {
             delay: calculateDelay(speed),
             isPaused,
             isCancelled,
-            onStep: (newArray) => setArray([...newArray]),
+            onStep: (newArray) => {
+                setArray([...newArray]);
+                setStats(prev => ({
+                    ...prev,
+                    writes: prev.writes + 1,
+                    sortedSegments: countSortedSegments(newArray),
+                    sortedPercentage: calculateSortedPercentage(newArray)
+                }));
+            },
             onCompare: (i, j) => {
                 setCurrentIndices([i, j]);
                 if (i >= 0 && i < array.length) {
                     audioManager.current.playNote(array[i], array.length, 'compare');
                 }
+                setStats(prev => ({
+                    ...prev,
+                    comparisons: prev.comparisons + 1
+                }));
             },
             onSwap: (newArray) => {
                 setArray([...newArray]);
                 if (currentIndices[0] >= 0 && currentIndices[0] < newArray.length) {
                     audioManager.current.playNote(newArray[currentIndices[0]], newArray.length, 'swap');
                 }
+                setStats(prev => ({
+                    ...prev,
+                    swaps: prev.swaps + 1,
+                    sortedSegments: countSortedSegments(newArray),
+                    sortedPercentage: calculateSortedPercentage(newArray)
+                }));
             }
         };
 
@@ -154,6 +179,13 @@ const SortingVisualizer = () => {
         setArray(newArray);
         setCurrentIndices([]);
         setIsComplete(false);
+        setStats({
+            comparisons: 0,
+            swaps: 0,
+            writes: 0,
+            sortedSegments: countSortedSegments(newArray),
+            sortedPercentage: calculateSortedPercentage(newArray)
+        });
     };
 
     const showCompletion = () => {
@@ -214,6 +246,26 @@ const SortingVisualizer = () => {
         const currentIndex = modes.indexOf(visualizationMode);
         const nextIndex = (currentIndex + 1) % modes.length;
         setVisualizationMode(modes[nextIndex]);
+    };
+
+    const countSortedSegments = (arr) => {
+        let segments = 1;
+        for (let i = 1; i < arr.length; i++) {
+            if (arr[i] < arr[i - 1]) {
+                segments++;
+            }
+        }
+        return segments;
+    };
+
+    const calculateSortedPercentage = (arr) => {
+        let sortedCount = 0;
+        for (let i = 1; i < arr.length; i++) {
+            if (arr[i] >= arr[i - 1]) {
+                sortedCount++;
+            }
+        }
+        return Math.round((sortedCount / (arr.length - 1)) * 100);
     };
 
     return (
@@ -337,6 +389,30 @@ const SortingVisualizer = () => {
                     </span>
                 </div>
             )}
+
+            {/* Stats Panel */}
+            <div className="mb-4 grid grid-cols-5 gap-4 text-sm">
+                <div className="bg-gray-100 p-2 rounded">
+                    <div className="font-semibold">Sorted</div>
+                    <div>{stats.sortedPercentage}%</div>
+                </div>
+                <div className="bg-gray-100 p-2 rounded">
+                    <div className="font-semibold">Segments</div>
+                    <div>{stats.sortedSegments}</div>
+                </div>
+                <div className="bg-gray-100 p-2 rounded">
+                    <div className="font-semibold">Comparisons</div>
+                    <div>{stats.comparisons}</div>
+                </div>
+                <div className="bg-gray-100 p-2 rounded">
+                    <div className="font-semibold">Swaps</div>
+                    <div>{stats.swaps}</div>
+                </div>
+                <div className="bg-gray-100 p-2 rounded">
+                    <div className="font-semibold">Array Writes</div>
+                    <div>{stats.writes}</div>
+                </div>
+            </div>
 
             {/* Visualization section */}
             <div className="h-96 bg-gray-100 rounded-lg relative overflow-hidden">
