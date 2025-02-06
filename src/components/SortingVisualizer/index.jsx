@@ -46,6 +46,8 @@ const SortingVisualizer = () => {
         setIsSoundEnabled(true);
     };
 
+    const [soundType, setSoundType] = useState('electronic');
+
     const toggleSound = () => {
         if (!isSoundEnabled) {
             initializeAudio();
@@ -53,6 +55,12 @@ const SortingVisualizer = () => {
             const isEnabled = audioManager.current.toggleSound();
             setIsSoundEnabled(isEnabled);
         }
+    };
+
+    const toggleSoundType = () => {
+        const newType = soundType === 'electronic' ? 'ambient' : 'electronic';
+        setSoundType(newType);
+        audioManager.current.setSoundType(newType);
     };
 
     // Create rainbow array based on current size
@@ -229,14 +237,24 @@ const SortingVisualizer = () => {
                             </option>
                         ))}
                     </select>
-                    <Button
-                        onClick={toggleSound}
-                        className={`${
-                            isSoundEnabled ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600'
-                        }`}
-                    >
-                        Sound {isSoundEnabled ? 'On' : 'Off'}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={toggleSound}
+                            className={`${
+                                isSoundEnabled ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600'
+                            }`}
+                        >
+                            Sound {isSoundEnabled ? 'On' : 'Off'}
+                        </Button>
+                        {isSoundEnabled && (
+                            <Button
+                                onClick={toggleSoundType}
+                                className="bg-purple-500 hover:bg-purple-600"
+                            >
+                                {soundType === 'electronic' ? 'Electronic' : 'Ambient'} Sound
+                            </Button>
+                        )}
+                    </div>
                     <Button
                         onClick={cycleVisualizationMode}
                         className="bg-indigo-500 hover:bg-indigo-600"

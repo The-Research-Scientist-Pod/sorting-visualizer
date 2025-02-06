@@ -6,6 +6,7 @@ export default class AudioManager {
         this.isEnabled = false;
         this.maxFreq = 1000;
         this.minFreq = 200;
+        this.soundType = 'electronic'; // 'electronic' or 'ambient'
     }
 
     initialize() {
@@ -40,34 +41,57 @@ export default class AudioManager {
         if (!this.isEnabled || !this.audioContext) return;
 
         try {
-            // Create oscillator and gain nodes
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
-
-            // Calculate frequency with validation
             const frequency = this.calculateFrequency(value, arraySize);
 
-            // Set the frequency safely
-            oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-
-            // Set waveform type and duration based on operation
-            if (type === 'compare') {
-                oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
-            } else if (type === 'swap') {
-                oscillator.type = 'triangle';
-                gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+            if (this.soundType === 'electronic') {
+                // Electronic sound profile
+                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                
+                if (type === 'compare') {
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                } else if (type === 'swap') {
+                    oscillator.type = 'triangle';
+                    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+                }
+            } else {
+                // Ambient sound profile
+                const baseFreq = frequency * 0.5;
+                oscillator.frequency.setValueAtTime(baseFreq, this.audioContext.currentTime);
+                
+                if (type === 'compare') {
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                    oscillator.frequency.exponentialRampToValueAtTime(
+                        baseFreq * 1.02, 
+                        this.audioContext.currentTime + 0.3
+                    );
+                } else if (type === 'swap') {
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+                    oscillator.frequency.exponentialRampToValueAtTime(
+                        baseFreq * 1.5, 
+                        this.audioContext.currentTime + 0.4
+                    );
+                }
             }
 
-            // Connect nodes
             oscillator.connect(gainNode);
             gainNode.connect(this.audioContext.destination);
 
-            // Play sound
             oscillator.start();
-            oscillator.stop(this.audioContext.currentTime + (type === 'compare' ? 0.1 : 0.15));
+            oscillator.stop(this.audioContext.currentTime + 
+                (this.soundType === 'electronic' ? 
+                    (type === 'compare' ? 0.1 : 0.15) : 
+                    (type === 'compare' ? 0.3 : 0.4)
+                )
+            );
 
         } catch (error) {
             console.error('Error playing note:', error);
@@ -75,29 +99,41 @@ export default class AudioManager {
         }
     }
 
+    setSoundType(type) {
+        this.soundType = type;
+    }
+
     playCompletion() {
         if (!this.isEnabled || !this.audioContext) return;
 
         try {
-            // Create nodes for completion sound
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
 
-            // Set up completion sound parameters
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(440, this.audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(880, this.audioContext.currentTime + 0.2);
+            if (this.soundType === 'electronic') {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, this.audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(880, this.audioContext.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(this.audioContext.currentTime + 0.3);
+            } else {
+                // Ambient completion sound
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(220, this.audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(440, this.audioContext.currentTime + 0.5);
+                
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.2, this.audioContext.currentTime + 0.3);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
+                
+                oscillator.start();
+                oscillator.stop(this.audioContext.currentTime + 0.8);
+            }
 
-            gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
-
-            // Connect nodes
             oscillator.connect(gainNode);
             gainNode.connect(this.audioContext.destination);
-
-            // Play completion sound
-            oscillator.start();
-            oscillator.stop(this.audioContext.currentTime + 0.3);
 
         } catch (error) {
             console.error('Error playing completion sound:', error);
