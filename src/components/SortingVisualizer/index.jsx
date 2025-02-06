@@ -316,7 +316,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                         </Button>
                     </div>
                 </div>
-                <div className="flex flex-col gap-4 min-w-[300px]">
+                <div className="flex flex-col gap-4 w-full sm:min-w-[300px]">
                     {/* Size control */}
                     <div className="flex items-center gap-4">
                         <span className="text-sm whitespace-nowrap">
