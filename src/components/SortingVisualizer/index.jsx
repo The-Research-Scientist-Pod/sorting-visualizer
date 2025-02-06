@@ -249,13 +249,28 @@ const SortingVisualizer = () => {
     };
 
     const countSortedSegments = (arr) => {
-        let segments = 1;
+        let sortedSegments = 0;
+        let totalSegments = 1;
+        let isCurrentSegmentSorted = true;
+        
         for (let i = 1; i < arr.length; i++) {
             if (arr[i] < arr[i - 1]) {
-                segments++;
+                if (isCurrentSegmentSorted) {
+                    sortedSegments++;
+                }
+                totalSegments++;
+                isCurrentSegmentSorted = true;
+            } else {
+                isCurrentSegmentSorted = isCurrentSegmentSorted && true;
             }
         }
-        return segments;
+        
+        // Count the last segment if it's sorted
+        if (isCurrentSegmentSorted) {
+            sortedSegments++;
+        }
+        
+        return Math.round((sortedSegments / totalSegments) * 100);
     };
 
     const calculateSortedPercentage = (arr) => {
@@ -397,8 +412,8 @@ const SortingVisualizer = () => {
                     <div>{stats.sortedPercentage}%</div>
                 </div>
                 <div className="bg-gray-100 p-2 rounded">
-                    <div className="font-semibold">Segments</div>
-                    <div>{stats.sortedSegments}</div>
+                    <div className="font-semibold">Sorted Segments</div>
+                    <div>{stats.sortedSegments}%</div>
                 </div>
                 <div className="bg-gray-100 p-2 rounded">
                     <div className="font-semibold">Comparisons</div>
