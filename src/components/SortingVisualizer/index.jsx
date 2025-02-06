@@ -258,7 +258,8 @@ const SortingVisualizer = () => {
     };
 
     return (
-        <div className={`p-4 w-full max-w-4xl mx-auto ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+        <div className={`p-4 w-full min-h-screen mx-auto ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+            <div className="max-w-4xl mx-auto">
             {/* Controls section */}
             <div className="mb-2 flex gap-4 justify-between items-start">
                 <div className="flex gap-4">
@@ -437,6 +438,7 @@ const SortingVisualizer = () => {
                         ))}
                     </div>
                 )}
+            </div>
             </div>
         </div>
     );
