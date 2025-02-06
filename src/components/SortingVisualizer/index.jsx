@@ -258,11 +258,11 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
     };
 
     return (
-        <div className={`p-4 w-full min-h-screen mx-auto ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
-            <div className="max-w-4xl mx-auto">
+        <div className={`p-2 sm:p-4 w-full min-h-screen mx-auto ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+            <div className="max-w-4xl mx-auto px-2 sm:px-0">
             {/* Controls section */}
-            <div className="mb-2 flex gap-4 justify-between items-start">
-                <div className="flex gap-4">
+            <div className="mb-2 flex flex-col sm:flex-row gap-4 justify-between items-start">
+                <div className="flex flex-wrap gap-2 sm:gap-4">
                     <select
                         value={selectedAlgorithm}
                         onChange={(e) => {
@@ -358,7 +358,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             </div>
 
             {/* Action buttons section */}
-            <div className="mb-4 flex gap-4">
+            <div className="mb-4 flex flex-wrap gap-2 sm:gap-4">
                 <Button
                     onClick={shuffleArray}
                     disabled={isSorting}
@@ -393,7 +393,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             )}
 
             {/* Stats Panel */}
-            <div className="mb-4 grid grid-cols-4 gap-4 text-sm">
+            <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-sm">
                 <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Sorted</div>
                     <div>{stats.sortedPercentage}%</div>
@@ -413,7 +413,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             </div>
 
             {/* Visualization section */}
-            <div className={`h-96 ${isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden`}>
+            <div className={`h-48 sm:h-72 md:h-96 ${isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden rounded-lg`}>
                 {visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
                     // Radial visualization with thin bars
                     <div className="w-full h-full relative transform-gpu">
