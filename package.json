@@ -9,7 +9,7 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "postinstall": "npm run build",
-    "start": "npm run preview"
+    "start": "vite preview --host 0.0.0.0 --port $PORT"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -19,6 +19,7 @@
     "react-dom": "^18.2.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "@vitejs/plugin-react": "^4.2.1",
     "vite": "^5.0.8"
   },
   "devDependencies": {
