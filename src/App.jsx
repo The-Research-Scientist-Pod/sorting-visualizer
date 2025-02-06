@@ -13,7 +13,7 @@ function App() {
                     <img 
                         src={logo} 
                         alt="App Logo" 
-                        className="h-32 w-auto" 
+                        className={`h-32 w-auto ${isDarkMode ? 'filter invert' : ''}`} 
                     />
                 </div>
 
