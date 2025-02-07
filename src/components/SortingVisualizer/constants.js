@@ -33,3 +33,5 @@ export const BUTTON_STATES = {
     PAUSED: 'Paused',
     READY: 'Ready',
 };
+
+export const DEMO_MODE = 'Demo Mode';

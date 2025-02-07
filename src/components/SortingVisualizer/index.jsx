@@ -40,6 +40,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         sortedPercentage: 0
     });
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isDemoMode, setIsDemoMode] = useState(false);
+    const [showControls, setShowControls] = useState(true);
 
     // Refs
     const isPaused = useRef(false);
@@ -256,11 +258,47 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         return Math.round((sortedCount / (arr.length - 1)) * 100);
     };
 
+    useEffect(() => {
+        let timeout;
+        const handleMouseMove = () => {
+            if (isDemoMode) {
+                setShowControls(true);
+                clearTimeout(timeout);
+                timeout = setTimeout(() => setShowControls(false), 2000);
+            }
+        };
+
+        if (isDemoMode) {
+            window.addEventListener('mousemove', handleMouseMove);
+            setShowControls(false);
+        } else {
+            setShowControls(true);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            clearTimeout(timeout);
+        };
+    }, [isDemoMode]);
+
     return (
-        <div className={`p-2 sm:p-4 w-full min-h-screen mx-auto ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+        <div 
+            className={`p-2 sm:p-4 w-full min-h-screen mx-auto ${isDemoMode ? 'bg-black text-white' : isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}
+        >
             <div className="max-w-4xl mx-auto px-2 sm:px-0">
+                <style>
+                    {`
+                        .controls-section {
+                            transition: opacity 0.3s ease-in-out;
+                        }
+                        .controls-hidden {
+                            opacity: 0;
+                            pointer-events: none;
+                        }
+                    `}
+                </style>
             {/* Controls section */}
-            <div className="mb-2 flex flex-col sm:flex-row gap-4 justify-between items-start">
+            <div className={`mb-2 flex flex-col sm:flex-row gap-4 justify-between items-start controls-section ${!showControls ? 'controls-hidden' : ''}`}>
                 <div className="flex flex-wrap gap-2 sm:gap-4">
                     <select
                         value={selectedAlgorithm}
@@ -313,6 +351,12 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                         >
                             {isDarkMode ? '☀️' : '🌙'}
                         </Button>
+                        <Button
+                            onClick={() => setIsDemoMode(!isDemoMode)}
+                            className="bg-purple-500 hover:bg-purple-600"
+                        >
+                            {isDemoMode ? 'Exit Demo' : 'Demo Mode'}
+                        </Button>
                     </div>
                 </div>
                 <div className="flex flex-col gap-4 w-full sm:min-w-[300px]">
@@ -357,7 +401,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             </div>
 
             {/* Action buttons section */}
-            <div className="mb-4 flex flex-wrap gap-2 sm:gap-4">
+            <div className={`mb-4 flex flex-wrap gap-2 sm:gap-4 controls-section ${!showControls ? 'controls-hidden' : ''}`}>
                 <Button
                     onClick={shuffleArray}
                     disabled={isSorting}
