@@ -394,26 +394,26 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
 
             {/* Stats Panel */}
             <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-sm">
-                <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                <div className="p-2 rounded bg-black">
                     <div className="font-semibold">Sorted</div>
                     <div>{stats.sortedPercentage}%</div>
                 </div>
-                <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                <div className="p-2 rounded bg-black">
                     <div className="font-semibold">Comparisons</div>
                     <div>{stats.comparisons}</div>
                 </div>
-                <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                <div className="p-2 rounded bg-black">
                     <div className="font-semibold">Swaps</div>
                     <div>{stats.swaps}</div>
                 </div>
-                <div className={`p-2 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                <div className="p-2 rounded bg-black">
                     <div className="font-semibold">Array Writes</div>
                     <div>{stats.writes}</div>
                 </div>
             </div>
 
             {/* Visualization section */}
-            <div className={`h-48 sm:h-72 md:h-96 ${isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden rounded-lg`}>
+            <div className={`h-48 sm:h-72 md:h-96 bg-black relative overflow-hidden rounded-lg`}>
                 {visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
                     // Radial visualization with thin bars
                     <div className="w-full h-full relative transform-gpu">
