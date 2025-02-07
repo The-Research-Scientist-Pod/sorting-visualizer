@@ -437,19 +437,19 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
 
             {/* Stats Panel */}
             <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-sm">
-                <div className={`p-2 rounded ${isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
+                <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Sorted</div>
                     <div>{stats.sortedPercentage}%</div>
                 </div>
-                <div className={`p-2 rounded ${isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
+                <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Comparisons</div>
                     <div>{stats.comparisons}</div>
                 </div>
-                <div className={`p-2 rounded ${isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
+                <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Swaps</div>
                     <div>{stats.swaps}</div>
                 </div>
-                <div className={`p-2 rounded ${isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
+                <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Array Writes</div>
                     <div>{stats.writes}</div>
                 </div>
