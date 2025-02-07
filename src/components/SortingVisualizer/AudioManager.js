@@ -44,7 +44,7 @@ export default class AudioManager {
         return Number.isFinite(clampedFreq) ? clampedFreq : this.minFreq;
     }
 
-    playNote(value, arraySize, type = 'compare') { // type can be 'compare', 'swap', or 'highlight'
+    playNote(value, arraySize, type = 'compare') { // type can be 'compare' or 'swap'
         if (!this.isEnabled || !this.audioContext) return;
 
         try {
@@ -66,12 +66,6 @@ export default class AudioManager {
                         oscillator.type = 'triangle';
                         gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
                         gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
-                        break;
-                    case 'highlight':
-                        oscillator.type = 'sawtooth';
-                        gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.12);
-                        oscillator.frequency.setValueAtTime(frequency * 1.5, this.audioContext.currentTime);
                         break;
                 }
             } else if (this.soundType === 'ambient') {
@@ -96,15 +90,6 @@ export default class AudioManager {
                         oscillator.frequency.exponentialRampToValueAtTime(
                             baseFreq * 1.5, 
                             this.audioContext.currentTime + 0.4
-                        );
-                        break;
-                    case 'highlight':
-                        oscillator.type = 'sine';
-                        gainNode.gain.setValueAtTime(0.07, this.audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.35);
-                        oscillator.frequency.exponentialRampToValueAtTime(
-                            baseFreq * 1.25, 
-                            this.audioContext.currentTime + 0.35
                         );
                         break;
                 }
