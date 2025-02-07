@@ -11,7 +11,7 @@ import {
 
 // Define size constraints
 const MIN_SIZE = 10;
-const MAX_SIZE = 500;
+const MAX_SIZE = 1000;
 const DEFAULT_SIZE = 200;
 
 // Visualization modes
