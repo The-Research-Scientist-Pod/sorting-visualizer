@@ -36,7 +36,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
     const [stats, setStats] = useState({
         comparisons: 0,
         swaps: 0,
-        writes: 0,
         sortedPercentage: 0
     });
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -137,7 +136,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                 setArray([...newArray]);
                 setStats(prev => ({
                     ...prev,
-                    writes: prev.writes + 1,
                     sortedPercentage: calculateSortedPercentage(newArray)
                 }));
             },
@@ -182,7 +180,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         setStats({
             comparisons: 0,
             swaps: 0,
-            writes: 0,
             sortedPercentage: calculateSortedPercentage(newArray)
         });
     };
@@ -448,10 +445,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                 <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Swaps</div>
                     <div>{stats.swaps}</div>
-                </div>
-                <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
-                    <div className="font-semibold">Array Writes</div>
-                    <div>{stats.writes}</div>
                 </div>
             </div>
 
