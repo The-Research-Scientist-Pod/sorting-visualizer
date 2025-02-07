@@ -456,7 +456,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             </div>
 
             {/* Visualization section */}
-            <div className={`h-48 sm:h-72 md:h-96 ${isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden`}>
+            <div className={`h-48 sm:h-72 md:h-96 ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden`}>
                 {visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
                     // Radial visualization with thin bars
                     <div className="w-full h-full relative transform-gpu">
