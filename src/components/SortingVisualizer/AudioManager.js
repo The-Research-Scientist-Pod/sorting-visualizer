@@ -37,7 +37,7 @@ export default class AudioManager {
         return Number.isFinite(frequency) ? frequency : this.minFreq;
     }
 
-    playNote(value, arraySize, type = 'compare') {
+    playNote(value, arraySize, type = 'compare') { // type can be 'compare', 'swap', or 'highlight'
         if (!this.isEnabled || !this.audioContext) return;
 
         try {
@@ -49,36 +49,57 @@ export default class AudioManager {
                 // Electronic sound profile
                 oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
                 
-                if (type === 'compare') {
-                    oscillator.type = 'sine';
-                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
-                } else if (type === 'swap') {
-                    oscillator.type = 'triangle';
-                    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+                switch (type) {
+                    case 'compare':
+                        oscillator.type = 'sine';
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                        break;
+                    case 'swap':
+                        oscillator.type = 'triangle';
+                        gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+                        break;
+                    case 'highlight':
+                        oscillator.type = 'sawtooth';
+                        gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.12);
+                        oscillator.frequency.setValueAtTime(frequency * 1.5, this.audioContext.currentTime);
+                        break;
                 }
             } else if (this.soundType === 'ambient') {
                 // Ambient sound profile
                 const baseFreq = frequency * 0.5;
                 oscillator.frequency.setValueAtTime(baseFreq, this.audioContext.currentTime);
                 
-                if (type === 'compare') {
-                    oscillator.type = 'sine';
-                    gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
-                    oscillator.frequency.exponentialRampToValueAtTime(
-                        baseFreq * 1.02, 
-                        this.audioContext.currentTime + 0.3
-                    );
-                } else if (type === 'swap') {
-                    oscillator.type = 'sine';
-                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
-                    oscillator.frequency.exponentialRampToValueAtTime(
-                        baseFreq * 1.5, 
-                        this.audioContext.currentTime + 0.4
-                    );
+                switch (type) {
+                    case 'compare':
+                        oscillator.type = 'sine';
+                        gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                        oscillator.frequency.exponentialRampToValueAtTime(
+                            baseFreq * 1.02, 
+                            this.audioContext.currentTime + 0.3
+                        );
+                        break;
+                    case 'swap':
+                        oscillator.type = 'sine';
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+                        oscillator.frequency.exponentialRampToValueAtTime(
+                            baseFreq * 1.5, 
+                            this.audioContext.currentTime + 0.4
+                        );
+                        break;
+                    case 'highlight':
+                        oscillator.type = 'sine';
+                        gainNode.gain.setValueAtTime(0.07, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.35);
+                        oscillator.frequency.exponentialRampToValueAtTime(
+                            baseFreq * 1.25, 
+                            this.audioContext.currentTime + 0.35
+                        );
+                        break;
                 }
             } else if (this.soundType === 'retro') {
                 // Retro 8-bit style sounds
