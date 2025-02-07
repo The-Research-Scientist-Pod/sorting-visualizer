@@ -54,7 +54,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         setIsSoundEnabled(true);
     };
 
-    const SOUND_TYPES = ['electronic', 'ambient', 'retro', 'crystal', 'percussion'];
+    const SOUND_TYPES = ['electronic', 'ambient', 'retro', 'crystal'];
     const [soundType, setSoundType] = useState('electronic');
 
     const toggleSound = () => {
