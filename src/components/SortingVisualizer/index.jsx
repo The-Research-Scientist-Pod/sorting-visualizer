@@ -433,7 +433,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             )}
 
             {/* Stats Panel */}
-            <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-sm">
+            <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4 text-sm justify-center mx-auto max-w-2xl">
                 <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
                     <div className="font-semibold">Sorted</div>
                     <div>{stats.sortedPercentage}%</div>
