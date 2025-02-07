@@ -113,14 +113,22 @@ export default class AudioManager {
                 oscillator.type = 'square';
                 const baseFreq = frequency * 0.25;
                 
-                if (type === 'compare') {
-                    oscillator.frequency.setValueAtTime(baseFreq, this.audioContext.currentTime);
-                    gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.1);
-                } else if (type === 'swap') {
-                    oscillator.frequency.setValueAtTime(baseFreq * 2, this.audioContext.currentTime);
-                    gainNode.gain.setValueAtTime(0.08, this.audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.15);
+                switch (type) {
+                    case 'compare':
+                        oscillator.frequency.setValueAtTime(baseFreq, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.1);
+                        break;
+                    case 'swap':
+                        oscillator.frequency.setValueAtTime(baseFreq * 2, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.08, this.audioContext.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.15);
+                        break;
+                    case 'highlight':
+                        oscillator.frequency.setValueAtTime(baseFreq * 1.5, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.06, this.audioContext.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.12);
+                        break;
                 }
             } else if (this.soundType === 'crystal') {
                 // Crystal-like bell sounds
@@ -128,18 +136,28 @@ export default class AudioManager {
                 const modulator = this.audioContext.createOscillator();
                 const modGain = this.audioContext.createGain();
                 
-                if (type === 'compare') {
-                    oscillator.frequency.setValueAtTime(frequency * 2, this.audioContext.currentTime);
-                    modulator.frequency.setValueAtTime(frequency * 0.5, this.audioContext.currentTime);
-                    modGain.gain.setValueAtTime(50, this.audioContext.currentTime);
-                    gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.2);
-                } else if (type === 'swap') {
-                    oscillator.frequency.setValueAtTime(frequency * 3, this.audioContext.currentTime);
-                    modulator.frequency.setValueAtTime(frequency * 0.75, this.audioContext.currentTime);
-                    modGain.gain.setValueAtTime(100, this.audioContext.currentTime);
-                    gainNode.gain.setValueAtTime(0.08, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
+                switch (type) {
+                    case 'compare':
+                        oscillator.frequency.setValueAtTime(frequency * 2, this.audioContext.currentTime);
+                        modulator.frequency.setValueAtTime(frequency * 0.5, this.audioContext.currentTime);
+                        modGain.gain.setValueAtTime(50, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.2);
+                        break;
+                    case 'swap':
+                        oscillator.frequency.setValueAtTime(frequency * 3, this.audioContext.currentTime);
+                        modulator.frequency.setValueAtTime(frequency * 0.75, this.audioContext.currentTime);
+                        modGain.gain.setValueAtTime(100, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.08, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
+                        break;
+                    case 'highlight':
+                        oscillator.frequency.setValueAtTime(frequency * 2.5, this.audioContext.currentTime);
+                        modulator.frequency.setValueAtTime(frequency * 0.6, this.audioContext.currentTime);
+                        modGain.gain.setValueAtTime(75, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.06, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.25);
+                        break;
                 }
                 
                 modulator.connect(modGain);
