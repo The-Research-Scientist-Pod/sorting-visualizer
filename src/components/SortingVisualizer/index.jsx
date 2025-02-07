@@ -123,8 +123,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
     };
 
     const calculateDelay = (speed) => {
-        const baseDelay = 500;
-        return Math.max(0, Math.floor(baseDelay * Math.pow(0.97, speed)));
+        // Linear interpolation between MIN_SPEED and MAX_SPEED
+        return MAX_SPEED + ((MIN_SPEED - MAX_SPEED) * (1 - speed / MAX_SPEED));
     };
 
     const createSorter = () => {
