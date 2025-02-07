@@ -123,8 +123,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
     };
 
     const calculateDelay = (speed) => {
-        // Direct mapping: speed value is the delay in milliseconds
-        return MAX_SPEED + (MIN_SPEED - MAX_SPEED) * (1 - speed / MAX_SPEED);
+        const baseDelay = 500;
+        return Math.max(0, Math.floor(baseDelay * Math.pow(0.97, speed)));
     };
 
     const createSorter = () => {

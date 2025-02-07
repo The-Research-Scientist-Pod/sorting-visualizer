@@ -1,7 +1,7 @@
 export const ARRAY_SIZE = 1000;
 export const MIN_SPEED = 1;
-export const MAX_SPEED = 1;
-export const DEFAULT_SPEED = 1;
+export const MAX_SPEED = 200;
+export const DEFAULT_SPEED = 50;
 
 export const ALGORITHMS = {
     BUBBLE_SORT: 'Bubble Sort',
