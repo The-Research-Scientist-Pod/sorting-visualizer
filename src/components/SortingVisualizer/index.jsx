@@ -54,6 +54,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         setIsSoundEnabled(true);
     };
 
+    const SOUND_TYPES = ['electronic', 'ambient', 'retro', 'crystal', 'percussion'];
     const [soundType, setSoundType] = useState('electronic');
 
     const toggleSound = () => {
@@ -65,8 +66,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         }
     };
 
-    const toggleSoundType = () => {
-        const newType = soundType === 'electronic' ? 'ambient' : 'electronic';
+    const changeSoundType = (newType) => {
         setSoundType(newType);
         audioManager.current.setSoundType(newType);
     };
@@ -323,12 +323,19 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                             Sound {isSoundEnabled ? 'On' : 'Off'}
                         </Button>
                         {isSoundEnabled && (
-                            <Button
-                                onClick={toggleSoundType}
-                                className="bg-purple-500 hover:bg-purple-600"
+                            <select
+                                value={soundType}
+                                onChange={(e) => changeSoundType(e.target.value)}
+                                className={`px-3 py-2 border rounded-md text-sm ${
+                                    isDarkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black border-gray-300'
+                                }`}
                             >
-                                {soundType === 'electronic' ? 'Electronic' : 'Ambient'} Sound
-                            </Button>
+                                {SOUND_TYPES.map((type) => (
+                                    <option key={type} value={type}>
+                                        {type.charAt(0).toUpperCase() + type.slice(1)} Sound
+                                    </option>
+                                ))}
+                            </select>
                         )}
                     </div>
                     <div className="flex gap-2">
