@@ -30,11 +30,18 @@ export default class AudioManager {
         // Ensure value is within bounds
         const normalizedValue = Math.max(1, Math.min(value, arraySize));
 
-        // Calculate frequency with validated values
-        const frequency = this.minFreq + ((normalizedValue - 1) / (arraySize - 1)) * (this.maxFreq - this.minFreq);
+        // Calculate base frequency based on array size
+        const baseFreq = this.minFreq + ((normalizedValue - 1) / (arraySize - 1)) * (this.maxFreq - this.minFreq);
+
+        // Add pitch variation based on the value
+        const pitchMultiplier = 0.5 + (value / arraySize);
+        const frequency = baseFreq * pitchMultiplier;
+
+        // Clamp the final frequency between minFreq and maxFreq * 2
+        const clampedFreq = Math.min(Math.max(frequency, this.minFreq), this.maxFreq * 2);
 
         // Ensure we return a valid frequency
-        return Number.isFinite(frequency) ? frequency : this.minFreq;
+        return Number.isFinite(clampedFreq) ? clampedFreq : this.minFreq;
     }
 
     playNote(value, arraySize, type = 'compare') { // type can be 'compare', 'swap', or 'highlight'
