@@ -9,8 +9,42 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; padding: 10px; background: rgba(255, 255, 255, 0.9);">
-      <p style="margin: 0; font-size: 0.9em;">
+    <style>
+      :root {
+        --footer-bg: rgba(255, 255, 255, 0.9);
+        --footer-text: #000;
+        --footer-link: #0066cc;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --footer-bg: rgba(0, 0, 0, 0.9);
+          --footer-text: #fff;
+          --footer-link: #66b3ff;
+        }
+      }
+      .adaptive-footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        background: var(--footer-bg);
+        color: var(--footer-text);
+      }
+      .adaptive-footer p {
+        margin: 0;
+        font-size: 0.9em;
+      }
+      .adaptive-footer a {
+        color: var(--footer-link);
+        text-decoration: none;
+      }
+      .adaptive-footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+    <footer class="adaptive-footer">
+      <p>
         View the <a href="https://github.com/The-Research-Scientist-Pod/sorting-visualizer" target="_blank">source code on GitHub</a> | 
         Learn more about <a href="https://researchdatapod.com/dsa/" target="_blank">Data Structures & Algorithms on my blog</a>
       </p>
