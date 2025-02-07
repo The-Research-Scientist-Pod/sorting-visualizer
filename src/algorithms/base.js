@@ -8,16 +8,13 @@ export class SortingAlgorithm {
     }
 
     async sleep() {
-        return new Promise(resolve => {
-            const check = () => {
-                if (!this.isPaused.current) {
-                    setTimeout(resolve, this.delay);
-                } else {
-                    setTimeout(check, 100);
-                }
-            };
-            check();
-        });
+        if (this.isPaused?.current) {
+            while (this.isPaused.current) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        } else {
+            await new Promise(resolve => setTimeout(resolve, this.delay));
+        }
     }
 
     // Helper method to swap elements and notify visualization
