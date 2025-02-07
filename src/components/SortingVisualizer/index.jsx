@@ -181,7 +181,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             comparisons: 0,
             swaps: 0,
             writes: 0,
-            sortedSegments: countSortedSegments(newArray),
             sortedPercentage: calculateSortedPercentage(newArray)
         });
     };
