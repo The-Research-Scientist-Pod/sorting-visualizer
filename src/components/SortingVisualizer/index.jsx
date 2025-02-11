@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
 import * as SortingAlgorithms from '@/algorithms/index.js';
+import ParticleSystemVisualization from './ParticleSystemVisualization.jsx';
+import SizeParticleSystem from './SizeParticleSystemVisualization.jsx';
+import DisparityParticleSystem from './DisparityParticleSystemVisualization.jsx';
 import AudioManager from './AudioManager';
 import {
     MIN_SPEED,
@@ -18,9 +21,11 @@ const DEFAULT_SIZE = 200;
 const VISUALIZATION_MODES = {
     MOUNTAIN: 'Mountain Mode',
     BAR: 'Bar Mode',
-    CIRCLE: 'Circle Mode'
+    CIRCLE: 'Circle Mode',
+    PARTICLE: 'Rainbow Particles',
+    SIZE_PARTICLE: 'Size Particles',
+    DISPARITY: 'Disparity Particles'
 };
-
 const SortingVisualizer = ({ onDarkModeChange }) => {
     // State management
     const [arraySize, setArraySize] = useState(DEFAULT_SIZE);
@@ -457,7 +462,23 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
 
             {/* Visualization section */}
             <div className={`h-48 sm:h-72 md:h-96 ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden`}>
-                {visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
+                {visualizationMode === VISUALIZATION_MODES.DISPARITY ? (
+                    <DisparityParticleSystem
+                        array={array}
+                        currentIndices={currentIndices}
+                    />
+                ) : visualizationMode === VISUALIZATION_MODES.SIZE_PARTICLE ? (
+                    <SizeParticleSystem
+                        array={array}
+                        currentIndices={currentIndices}
+                    />
+                ) : visualizationMode === VISUALIZATION_MODES.PARTICLE ? (
+                        <ParticleSystemVisualization
+                            array={array}
+                            currentIndices={currentIndices}
+                            getColor={getColor}
+                        />
+                    ) : visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
                     // Radial visualization with thin bars
                     <div className="w-full h-full relative transform-gpu">
                         {array.map((value, idx) => (
