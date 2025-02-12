@@ -71,9 +71,14 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         }
     };
 
+    // Update the sound type change handler
     const changeSoundType = (newType) => {
         setSoundType(newType);
         audioManager.current.setSoundType(newType);
+        // Update sound type for active RadixSort if applicable
+        if (currentSorter.current && selectedAlgorithm === ALGORITHMS.RADIX_SORT) {
+            currentSorter.current.audioManager?.setSoundType(newType);
+        }
     };
 
     // Create rainbow array based on current size
@@ -137,6 +142,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             delay: calculateDelay(speed),
             isPaused,
             isCancelled,
+            soundEnabled: isSoundEnabled,  // Pass sound enabled state
             onStep: (newArray) => {
                 setArray([...newArray]);
                 setStats(prev => ({
@@ -146,7 +152,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             },
             onCompare: (i, j) => {
                 setCurrentIndices([i, j]);
-                if (i >= 0 && i < array.length) {
+                // Only use general audio manager for non-RadixSort algorithms
+                if (selectedAlgorithm !== ALGORITHMS.RADIX_SORT && i >= 0 && i < array.length) {
                     audioManager.current.playNote(array[i], array.length, 'compare');
                 }
                 setStats(prev => ({
@@ -156,7 +163,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             },
             onSwap: (newArray) => {
                 setArray([...newArray]);
-                if (currentIndices[0] >= 0 && currentIndices[0] < newArray.length) {
+                // Only use general audio manager for non-RadixSort algorithms
+                if (selectedAlgorithm !== ALGORITHMS.RADIX_SORT && currentIndices[0] >= 0 && currentIndices[0] < newArray.length) {
                     audioManager.current.playNote(newArray[currentIndices[0]], newArray.length, 'swap');
                 }
                 setStats(prev => ({
@@ -168,7 +176,18 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         };
 
         const Algorithm = SortingAlgorithms[selectedAlgorithm.replace(/\s+/g, '')];
-        return new Algorithm(config);
+        const sorter = new Algorithm(config);
+
+        // Initialize RadixSort audio manager if applicable
+        if (selectedAlgorithm === ALGORITHMS.RADIX_SORT && sorter.audioManager) {
+            if (isSoundEnabled) {
+                sorter.audioManager.initialize();
+                sorter.audioManager.isEnabled = true;
+            }
+            sorter.audioManager.setSoundType(soundType);
+        }
+
+        return sorter;
     };
 
     const shuffleArray = () => {

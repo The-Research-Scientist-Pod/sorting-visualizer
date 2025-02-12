@@ -1,94 +1,107 @@
 import { SortingAlgorithm } from "@/algorithms/base.js";
+import { RadixSortAudioManager } from "../components/SortingVisualizer/RadixSortAudioManager";
 
 export class RadixSort extends SortingAlgorithm {
+    constructor(config) {
+        super(config);
+        this.audioManager = new RadixSortAudioManager();
+        // Initialize audio if sound is enabled
+        if (config.soundEnabled) {
+            this.audioManager.initialize();
+            this.audioManager.isEnabled = true;
+        }
+    }
+
     async sort(array) {
         try {
             let max = Math.max(...array);
-
-            // Track the number of digits for progress
-            const totalDigits = Math.floor(Math.log10(max)) + 1;
-            let currentDigit = 1;
-
-            // Perform counting sort for each digit (1s, 10s, 100s, ...)
             for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
-                // Highlight the current digit position we're sorting
-                this.onStep?.([...array]);
-                await this.countingSort(array, exp, currentDigit / totalDigits);
-                currentDigit++;
+                await this.checkState();
+                await this.countingSort(array, exp);
             }
-
             return array;
         } catch (error) {
-            if (error.message === "Sorting cancelled") {
-                return array; // Allow graceful cancellation
+            if (error.message === 'Sorting cancelled') {
+                return array;
             }
             throw error;
         }
     }
 
-    async countingSort(array, exp, progressFactor) {
+    async countingSort(array, exp) {
         const n = array.length;
         const output = new Array(n);
         const count = new Array(10).fill(0);
 
-        // Phase 1: Count occurrences of digits
+        // Count occurrences
         for (let i = 0; i < n; i++) {
-            await this.sleep();
+            await this.checkState();
             const digit = Math.floor(array[i] / exp) % 10;
             count[digit]++;
+            this.onCompare?.(i, Math.min(i + digit, n - 1));
 
-            // Play sound based on the digit being counted (0-9)
-            // Use a higher pitch for larger digits
-            const normalizedValue = (digit + 1) * (array.length / 10);
-            this.onCompare?.(i, Math.floor(normalizedValue * progressFactor));
+            // Play bucket placement sound
+            if (this.audioManager && this.audioManager.isEnabled) {
+                this.audioManager.playBucketPlacement(digit, array[i], n);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, this.delay));
         }
 
         // Calculate cumulative count
         for (let i = 1; i < 10; i++) {
+            await this.checkState();
             count[i] += count[i - 1];
         }
 
-        // Phase 2: Build output array with audio feedback
+        // Build output array
         for (let i = n - 1; i >= 0; i--) {
-            await this.sleep();
+            await this.checkState();
             const digit = Math.floor(array[i] / exp) % 10;
-            const position = count[digit] - 1;
+            const position = --count[digit];
             output[position] = array[i];
-            count[digit]--;
 
-            // Play movement sound
-            // Use the value being moved for pitch
+            // Trigger visualizations
             this.onCompare?.(i, position);
+            this.onSwap?.([...array.slice(0, position), array[i], ...array.slice(position + 1)]);
 
-            // Visualize and play sound for each placement
-            const tempArray = new Array(n).fill(0);
-            for (let j = 0; j <= i; j++) {
-                if (output[j] !== undefined) {
-                    tempArray[j] = output[j];
-                } else {
-                    tempArray[j] = array[j];
-                }
+            // Play bucket placement sound
+            if (this.audioManager && this.audioManager.isEnabled) {
+                this.audioManager.playBucketPlacement(digit, array[i], n);
             }
-            this.onSwap?.(tempArray);
+
+            await new Promise(resolve => setTimeout(resolve, this.delay));
         }
 
-        // Phase 3: Copy back to original array with final audio feedback
+        // Copy back to original array
         for (let i = 0; i < n; i++) {
-            await this.sleep();
-            const oldValue = array[i];
+            await this.checkState();
             array[i] = output[i];
+            this.onCompare?.(i, i);
+            this.onSwap?.(array);
 
-            // Play sound based on the final position
-            // Higher pitch for larger values
-            const normalizedValue = (array[i] / Math.max(...array)) * array.length;
-            this.onCompare?.(i, Math.floor(normalizedValue));
-
-            // Only trigger swap sound if values actually changed
-            if (oldValue !== array[i]) {
-                this.onSwap?.([...array]);
+            // Play copy back sound
+            if (this.audioManager && this.audioManager.isEnabled) {
+                this.audioManager.playCopyBack(array[i], n);
             }
+
+            await new Promise(resolve => setTimeout(resolve, this.delay));
         }
 
         return array;
+    }
+
+    async checkState() {
+        if (this.isCancelled?.current) {
+            throw new Error('Sorting cancelled');
+        }
+
+        while (this.isPaused?.current && !this.isCancelled?.current) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        if (this.isCancelled?.current) {
+            throw new Error('Sorting cancelled');
+        }
     }
 }

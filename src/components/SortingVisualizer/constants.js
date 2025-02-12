@@ -26,6 +26,7 @@ export const ALGORITHMS = {
     STOOGE_SORT: 'Stooge Sort',
     ODD_EVEN_SORT: 'Odd Even Sort',
     PIGEONHOLE_SORT: 'Pigeonhole Sort',
+    STALIN_SORT: 'Stalin Sort',
 };
 
 export const BUTTON_STATES = {
