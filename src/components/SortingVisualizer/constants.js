@@ -12,7 +12,8 @@ export const ALGORITHMS = {
     SHELL_SORT: 'Shell Sort',
     HEAP_SORT: 'Heap Sort',
     COCKTAIL_SORT: 'Cocktail Sort',
-    RADIX_SORT: 'Radix Sort',
+    DECIMAL_RADIX_SORT: 'Decimal Radix Sort',
+    BINARY_RADIX_SORT: 'Binary Radix Sort',
     COMB_SORT: 'Comb Sort',
     TIM_SORT: 'Tim Sort',
     INTRO_SORT: 'Intro Sort',
@@ -27,6 +28,7 @@ export const ALGORITHMS = {
     ODD_EVEN_SORT: 'Odd Even Sort',
     PIGEONHOLE_SORT: 'Pigeonhole Sort',
     STALIN_SORT: 'Stalin Sort',
+
 };
 
 export const BUTTON_STATES = {

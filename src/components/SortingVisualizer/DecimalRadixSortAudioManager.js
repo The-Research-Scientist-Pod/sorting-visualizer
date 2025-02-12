@@ -1,18 +1,18 @@
-import AudioManager from "./AudioManager";
+import { RadixSortAudioManager } from './RadixSortAudioManager';
 
-export class RadixSortAudioManager extends AudioManager {
-    constructor(base = 10) {
-        super();
-        this.base = base;
-        this.minFreq = 200;
-        this.maxFreq = 1000;
+export class DecimalRadixSortAudioManager extends RadixSortAudioManager {
+    constructor() {
+        super(10); // Initialize with base 10
+        // Use frequencies that form a major scale
+        this.minFreq = 220;  // A3
+        this.maxFreq = 880;  // A5
         this.initializeFrequencies();
     }
 
     initializeFrequencies() {
-        this.bucketFrequencies = new Array(this.base).fill(0).map((_, i) =>
-            this.minFreq + (i * ((this.maxFreq - this.minFreq) / (this.base - 1)))
-        );
+        // Create a major scale frequency mapping for digits 0-9
+        const majorScaleRatios = [1, 1.125, 1.25, 1.333, 1.5, 1.667, 1.875, 2, 2.25, 2.5];
+        this.bucketFrequencies = majorScaleRatios.map(ratio => this.minFreq * ratio);
     }
 
     playBucketPlacement(digit, value, arraySize) {
@@ -24,6 +24,7 @@ export class RadixSortAudioManager extends AudioManager {
             const gainNode = this.createSmoothGain();
             this.activeNodes.add(oscillator);
 
+            // Use musical scale frequencies for better harmony
             const baseFreq = this.bucketFrequencies[digit];
             const valueFreq = this.calculateFrequency(value, arraySize);
             const finalFreq = (baseFreq + valueFreq) / 2;
@@ -80,10 +81,11 @@ export class RadixSortAudioManager extends AudioManager {
             }, 300);
 
         } catch (error) {
-            console.error('Error playing bucket placement sound:', error);
+            console.error('Error playing decimal bucket placement sound:', error);
         }
     }
 
+    // Override playCopyBack to use musical scale for final array reconstruction
     playCopyBack(value, arraySize) {
         if (!this.isEnabled || !this.audioContext) return;
         if (!this.shouldPlayNote()) return;
@@ -93,7 +95,11 @@ export class RadixSortAudioManager extends AudioManager {
             const gainNode = this.createSmoothGain();
             this.activeNodes.add(oscillator);
 
-            const frequency = this.calculateFrequency(value, arraySize);
+            // Use a frequency that corresponds to the value's position in the scale
+            const normalizedValue = value / arraySize;
+            const scaleIndex = Math.floor(normalizedValue * 10);
+            const baseFreq = this.bucketFrequencies[Math.min(scaleIndex, 9)];
+            const frequency = (baseFreq + this.calculateFrequency(value, arraySize)) / 2;
 
             let filter;
             let modulator;
@@ -143,57 +149,7 @@ export class RadixSortAudioManager extends AudioManager {
             }, 250);
 
         } catch (error) {
-            console.error('Error playing copy back sound:', error);
+            console.error('Error playing decimal copy back sound:', error);
         }
-    }
-
-    // Helper methods
-    createRetroFilter(frequency) {
-        const filter = this.audioContext.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = frequency;
-        filter.Q.value = 1;
-        this.activeNodes.add(filter);
-        return filter;
-    }
-
-    setupRetroConnection(oscillator, gainNode, filter) {
-        oscillator.connect(gainNode);
-        gainNode.disconnect();
-        gainNode.connect(filter);
-        filter.connect(this.masterGain);
-    }
-
-    createCrystalModulation(frequency, baseFreq) {
-        const modulator = this.audioContext.createOscillator();
-        const modGain = this.audioContext.createGain();
-
-        this.activeNodes.add(modulator);
-        this.activeNodes.add(modGain);
-
-        modulator.type = 'sine';
-        modulator.frequency.setValueAtTime(baseFreq * 0.25, this.audioContext.currentTime);
-        modGain.gain.setValueAtTime(50, this.audioContext.currentTime);
-
-        return { modulator, modGain };
-    }
-
-    setupCrystalSound(oscillator, gainNode, modulator, modGain, frequency) {
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-        modulator.connect(modGain);
-        modGain.connect(oscillator.frequency);
-    }
-
-    connectAndPlayCrystal(oscillator, gainNode, modulator, modGain, duration, cleanupDelay) {
-        oscillator.connect(gainNode);
-        modulator.start();
-        oscillator.start();
-        modulator.stop(this.audioContext.currentTime + duration);
-        oscillator.stop(this.audioContext.currentTime + duration);
-        setTimeout(() => {
-            this.activeNodes.delete(modulator);
-            this.activeNodes.delete(modGain);
-        }, cleanupDelay);
     }
 }

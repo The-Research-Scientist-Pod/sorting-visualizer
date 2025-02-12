@@ -20,4 +20,7 @@ export { DualPivotQuickSort } from './dualPivotQuickSort';
 export { StoogeSort } from './stoogeSort';
 export { OddEvenSort } from './oddEvenSort'
 export { PigeonholeSort } from './pigeonholeSort'
+export { StalinSort } from './stalinSort';
+export { BinaryRadixSort } from './binaryRadixSort';
+export { DecimalRadixSort } from './decimalRadixSort';
 // Export additional algorithms as they're implemented
