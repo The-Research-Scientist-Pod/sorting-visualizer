@@ -42,6 +42,11 @@ export class MergeSort extends SortingAlgorithm {
         const L = new Array(n1);
         const R = new Array(n2);
 
+        // Start continuous merge sound
+        if (this.onCompare) {
+            this.onCompare(left, right, 'merge');
+        }
+
         // Copy data to temp arrays L[] and R[]
         for (let i = 0; i < n1; i++) {
             L[i] = array[left + i];
@@ -63,6 +68,11 @@ export class MergeSort extends SortingAlgorithm {
         while (i < n1 && j < n2) {
             await this.checkState();
             await new Promise(resolve => setTimeout(resolve, this.delay));
+
+            // Compare with audio feedback
+            if (this.onCompare) {
+                this.onCompare(left + i, mid + 1 + j, 'compare');
+            }
 
             if (L[i] <= R[j]) {
                 if (array[k] !== L[i]) {
