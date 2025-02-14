@@ -101,7 +101,7 @@ export default class AudioManager {
         return true;
     }
 
-    playNote(value, arraySize, type = 'compare') {
+    playNote(value, arraySize, type = 'compare') { // types: 'compare', 'swap', 'highlight', 'merge'
         if (!this.isEnabled || !this.audioContext) return;
         if (!this.shouldPlayNote()) return;
 
@@ -131,6 +131,12 @@ export default class AudioManager {
                         this.smoothStart(gainNode, 0.15);
                         this.smoothStop(gainNode, 0.12);
                         oscillator.frequency.setValueAtTime(frequency * 1.25, this.audioContext.currentTime);
+                        break;
+                    case 'merge':
+                        oscillator.type = 'sine';
+                        this.smoothStart(gainNode, 0.2);
+                        this.smoothStop(gainNode, 0.2);
+                        oscillator.frequency.setValueAtTime(frequency * 1.5, this.audioContext.currentTime);
                         break;
                 }
             } else if (this.soundType === 'ambient') {
