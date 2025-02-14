@@ -42,15 +42,6 @@ export class MergeSort extends SortingAlgorithm {
         const L = new Array(n1);
         const R = new Array(n2);
 
-        // Start continuous merge sound at the beginning
-        if (this.onCompare) {
-            this.onCompare(left, right, 'merge');
-        }
-
-        // Calculate total elements to be merged for progress tracking
-        const totalElements = n1 + n2;
-        let mergedElements = 0;
-
         // Copy data to temp arrays L[] and R[]
         for (let i = 0; i < n1; i++) {
             L[i] = array[left + i];
