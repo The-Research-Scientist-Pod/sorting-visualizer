@@ -54,37 +54,41 @@ export class MergeSort extends SortingAlgorithm {
         let j = 0;
         let k = left;
 
-        // Merge temp arrays back into array[left..right]
-        // Play merge sound at start of merge
+        // Start continuous merge sound
         if (this.onCompare) {
             this.onCompare(left, right, 'merge');
-            await new Promise(resolve => setTimeout(resolve, this.delay));
         }
+
+        // Merge temp arrays back into array[left..right]
         while (i < n1 && j < n2) {
             await this.checkState();
             await new Promise(resolve => setTimeout(resolve, this.delay));
 
             if (L[i] <= R[j]) {
-                array[k] = L[i];
+                if (array[k] !== L[i]) {
+                    array[k] = L[i];
+                    this.onSwap?.(array); // Count as swap when value changes
+                }
                 i++;
             } else {
-                array[k] = R[j];
+                if (array[k] !== R[j]) {
+                    array[k] = R[j];
+                    this.onSwap?.(array); // Count as swap when value changes
+                }
                 j++;
             }
 
-            // Visualize the placement of element and play merge sound
             this.onStep?.(array);
-            // Play merge sound periodically during merge
-            if (k % 3 === 0 && this.onCompare) {
-                this.onCompare(k, k, 'merge');
-            }
             k++;
         }
 
         // Copy remaining elements of L[] if any
         while (i < n1) {
             await this.checkState();
-            array[k] = L[i];
+            if (array[k] !== L[i]) {
+                array[k] = L[i];
+                this.onSwap?.(array); // Count as swap when value changes
+            }
             this.onStep?.(array);
             i++;
             k++;
@@ -93,7 +97,10 @@ export class MergeSort extends SortingAlgorithm {
         // Copy remaining elements of R[] if any
         while (j < n2) {
             await this.checkState();
-            array[k] = R[j];
+            if (array[k] !== R[j]) {
+                array[k] = R[j];
+                this.onSwap?.(array); // Count as swap when value changes
+            }
             this.onStep?.(array);
             j++;
             k++;
