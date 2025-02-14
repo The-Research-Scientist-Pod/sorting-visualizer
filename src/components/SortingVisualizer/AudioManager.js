@@ -134,30 +134,23 @@ export default class AudioManager {
                         break;
                     case 'merge':
                         oscillator.type = 'sine';
-                        this.smoothStart(gainNode, 0.2);
-                        this.smoothStop(gainNode, 1.5);
-                        // Long sweeping frequency for merge operation
-                        const startFreq = frequency * 0.25;
-                        const endFreq = frequency * 5;
+                        this.smoothStart(gainNode, 0.15);
+                        // Don't stop the sound immediately - it will be stopped when merge completes
+                        const startFreq = frequency * 0.5;
                         oscillator.frequency.setValueAtTime(startFreq, this.audioContext.currentTime);
-                        oscillator.frequency.exponentialRampToValueAtTime(
-                            endFreq,
-                            this.audioContext.currentTime + 1.5
-                        );
+                        
                         // Add a second oscillator for richness
                         const osc2 = this.audioContext.createOscillator();
                         const gain2 = this.createSmoothGain();
                         osc2.type = 'sine';
                         osc2.frequency.setValueAtTime(startFreq * 1.5, this.audioContext.currentTime);
-                        osc2.frequency.exponentialRampToValueAtTime(
-                            endFreq * 1.5,
-                            this.audioContext.currentTime + 1.5
-                        );
-                        this.smoothStart(gain2, 0.1);
-                        this.smoothStop(gain2, 1.5);
+                        this.smoothStart(gain2, 0.08);
                         osc2.connect(gain2);
                         osc2.start();
-                        osc2.stop(this.audioContext.currentTime + 1.5);
+                        
+                        // Store the oscillators and gains for later frequency updates
+                        this.mergeOscillators = [oscillator, osc2];
+                        this.mergeGains = [gainNode, gain2];
                         this.activeNodes.add(osc2);
                         this.activeNodes.add(gain2);
                         break;

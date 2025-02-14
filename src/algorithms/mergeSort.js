@@ -42,10 +42,14 @@ export class MergeSort extends SortingAlgorithm {
         const L = new Array(n1);
         const R = new Array(n2);
 
-        // Start continuous merge sound
+        // Start continuous merge sound at the beginning
         if (this.onCompare) {
             this.onCompare(left, right, 'merge');
         }
+
+        // Calculate total elements to be merged for progress tracking
+        const totalElements = n1 + n2;
+        let mergedElements = 0;
 
         // Copy data to temp arrays L[] and R[]
         for (let i = 0; i < n1; i++) {
@@ -77,15 +81,22 @@ export class MergeSort extends SortingAlgorithm {
             if (L[i] <= R[j]) {
                 if (array[k] !== L[i]) {
                     array[k] = L[i];
-                    this.onSwap?.(array); // Count as swap when value changes
+                    this.onSwap?.(array);
                 }
                 i++;
             } else {
                 if (array[k] !== R[j]) {
                     array[k] = R[j];
-                    this.onSwap?.(array); // Count as swap when value changes
+                    this.onSwap?.(array);
                 }
                 j++;
+            }
+
+            mergedElements++;
+            // Update merge sound frequency based on progress
+            if (this.onCompare) {
+                const progress = mergedElements / totalElements;
+                this.onCompare(k, k, 'mergeProgress', progress);
             }
 
             this.onStep?.(array);
@@ -114,6 +125,11 @@ export class MergeSort extends SortingAlgorithm {
             this.onStep?.(array);
             j++;
             k++;
+        }
+
+        // Cleanup merge sound
+        if (this.onCompare) {
+            this.onCompare(left, right, 'mergeEnd');
         }
     }
 
