@@ -26,6 +26,7 @@ const VISUALIZATION_MODES = {
     SIZE_PARTICLE: 'Size Particles',
     DISPARITY: 'Disparity Particles'
 };
+
 const SortingVisualizer = ({ onDarkModeChange }) => {
     // State management
     const [arraySize, setArraySize] = useState(DEFAULT_SIZE);
@@ -52,6 +53,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
     const isCancelled = useRef(false);
     const currentSorter = useRef(null);
     const audioManager = useRef(new AudioManager());
+    const mergeCleanupTimeout = useRef(null);
 
     // Initialize audio context on first user interaction
     const initializeAudio = () => {
@@ -118,7 +120,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
     const getRadialBarStyles = (index, value, totalElements) => {
         // Calculate degree for this bar
         const degree = (index / totalElements) * 360;
-
         return {
             position: 'absolute',
             height: '40%', // Fixed length for bars
@@ -128,7 +129,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             left: '50%',
             bottom: '50%',
             transform: `rotate(${degree}deg)`,
-            transition: 'background-color 0.1s ease',
+            transition: 'background-color 0.1s ease'
         };
     };
 
@@ -142,7 +143,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             delay: calculateDelay(speed),
             isPaused,
             isCancelled,
-            soundEnabled: isSoundEnabled,  // Pass sound enabled state
+            soundEnabled: isSoundEnabled, // Pass sound enabled state
             onStep: (newArray) => {
                 setArray([...newArray]);
                 setStats(prev => ({
@@ -154,7 +155,24 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                 setCurrentIndices([i, j]);
                 // Only use general audio manager for non-RadixSort algorithms
                 if (selectedAlgorithm !== ALGORITHMS.RADIX_SORT && i >= 0 && i < array.length) {
-                    if (type === 'mergeProgress' && progress !== undefined) {
+                    if (type === 'merge') {
+                        // Cancel any pending merge cleanup
+                        if (mergeCleanupTimeout.current) {
+                            clearTimeout(mergeCleanupTimeout.current);
+                            mergeCleanupTimeout.current = null;
+                        }
+                        // Do not start merge sound immediately;
+                        // let the first mergeProgress event trigger the sound.
+                    } else if (type === 'mergeProgress' && progress !== undefined) {
+                        // Cancel pending cleanup if progress events continue
+                        if (mergeCleanupTimeout.current) {
+                            clearTimeout(mergeCleanupTimeout.current);
+                            mergeCleanupTimeout.current = null;
+                        }
+                        // If merge sound is not active yet, start it now.
+                        if (!audioManager.current.mergeOscillators) {
+                            audioManager.current.playNote(array[i], array.length, 'merge');
+                        }
                         // Update merge sound frequency based on progress
                         const frequency = audioManager.current.calculateFrequency(
                             Math.floor(progress * array.length),
@@ -163,20 +181,26 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                         if (audioManager.current.mergeOscillators) {
                             const now = audioManager.current.audioContext.currentTime;
                             audioManager.current.mergeOscillators.forEach((osc, idx) => {
-                                osc.frequency.setValueAtTime(frequency * (idx === 0 ? 1 : 1.5), now);
+                                osc.frequency.setValueAtTime(
+                                    frequency * (idx === 0 ? 1 : 1.5),
+                                    now
+                                );
                             });
                         }
                     } else if (type === 'mergeEnd') {
-                        // Stop merge sound
-                        if (audioManager.current.mergeGains) {
-                            const now = audioManager.current.audioContext.currentTime;
-                            audioManager.current.mergeGains.forEach(gain => {
-                                gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                            });
-                            audioManager.current.mergeOscillators = null;
-                            audioManager.current.mergeGains = null;
+                        // For final merge (entire array), use a longer delay before cleanup.
+                        const delayTime = (i === 0 && j === array.length - 1) ? 2000 : 500;
+                        mergeCleanupTimeout.current = setTimeout(() => {
+                            audioManager.current.cleanupMergeSounds();
+                            mergeCleanupTimeout.current = null;
+                        }, delayTime);
+                    } else if (type === 'compare') {
+                        // Only play compare sound if merge sound is not active
+                        if (!audioManager.current.mergeOscillators) {
+                            audioManager.current.playNote(array[i], array.length, type);
                         }
                     } else {
+                        // Fallback for any other type
                         audioManager.current.playNote(array[i], array.length, type);
                     }
                 }
@@ -187,9 +211,15 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
             },
             onSwap: (newArray) => {
                 setArray([...newArray]);
-                // Only use general audio manager for non-RadixSort algorithms
-                if (selectedAlgorithm !== ALGORITHMS.RADIX_SORT && currentIndices[0] >= 0 && currentIndices[0] < newArray.length) {
-                    audioManager.current.playNote(newArray[currentIndices[0]], newArray.length, 'swap');
+                // Only play swap sound if merge sound is not active
+                if (
+                    selectedAlgorithm !== ALGORITHMS.RADIX_SORT &&
+                    currentIndices[0] >= 0 &&
+                    currentIndices[0] < newArray.length
+                ) {
+                    if (!audioManager.current.mergeOscillators) {
+                        audioManager.current.playNote(newArray[currentIndices[0]], newArray.length, 'swap');
+                    }
                 }
                 setStats(prev => ({
                     ...prev,
@@ -216,7 +246,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
 
     const shuffleArray = () => {
         if (isSorting) return;
-
         const newArray = [...array];
         for (let i = newArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -232,32 +261,37 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         });
     };
 
+    // Modified showCompletion: immediately clear merge sounds so they don't linger.
     const showCompletion = () => {
         setIsComplete(true);
+        if (mergeCleanupTimeout.current) {
+            clearTimeout(mergeCleanupTimeout.current);
+            mergeCleanupTimeout.current = null;
+        }
+        audioManager.current.cleanupMergeSounds();
         audioManager.current.playCompletion();
     };
 
     const startSort = async () => {
         const initialArray = createRainbowArray(arraySize);
-        if ((isSorting && !isPaused.current) || array.every((value, index) => value === initialArray[index])) {
+        if (
+            (isSorting && !isPaused.current) ||
+            array.every((value, index) => value === initialArray[index])
+        ) {
             return;
         }
-
         isCancelled.current = false;
         currentSorter.current = createSorter();
         setIsSorting(true);
         isPaused.current = false;
         setPauseText('Pause');
         setIsComplete(false);
-
         try {
             const sortedArray = await currentSorter.current.sort([...array]);
-
             if (!isCancelled.current) {
                 const isSorted = sortedArray.every((val, idx) =>
                     idx === 0 || sortedArray[idx - 1] <= val
                 );
-
                 if (isSorted) {
                     setArray(sortedArray);
                     setIsSorting(false);
@@ -292,7 +326,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
         setVisualizationMode(modes[nextIndex]);
     };
 
-
     const calculateSortedPercentage = (arr) => {
         let sortedCount = 0;
         for (let i = 1; i < arr.length; i++) {
@@ -312,14 +345,12 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                 timeout = setTimeout(() => setShowControls(false), 2000);
             }
         };
-
         if (isDemoMode) {
             window.addEventListener('mousemove', handleMouseMove);
             setShowControls(false);
         } else {
             setShowControls(true);
         }
-
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             clearTimeout(timeout);
@@ -327,229 +358,241 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
     }, [isDemoMode]);
 
     return (
-        <div 
-            className={`p-2 sm:p-4 w-full min-h-screen mx-auto ${isDemoMode ? 'bg-black text-white' : isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}
+        <div
+            className={`p-2 sm:p-4 w-full min-h-screen mx-auto ${
+                isDemoMode
+                    ? 'bg-black text-white'
+                    : isDarkMode
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-white text-black'
+            }`}
         >
             <div className="max-w-4xl mx-auto px-2 sm:px-0">
                 <style>
                     {`
-                        .controls-section {
-                            transition: opacity 0.3s ease-in-out;
-                        }
-                        .controls-hidden {
-                            opacity: 0;
-                            pointer-events: none;
-                        }
-                    `}
+            .controls-section {
+              transition: opacity 0.3s ease-in-out;
+            }
+            .controls-hidden {
+              opacity: 0;
+              pointer-events: none;
+            }
+          `}
                 </style>
-            {/* Controls section */}
-            <div className={`mb-2 flex flex-col sm:flex-row gap-4 justify-between items-start controls-section ${!showControls ? 'controls-hidden' : ''}`}>
-                <div className="flex flex-wrap gap-2 sm:gap-4">
-                    <select
-                        value={selectedAlgorithm}
-                        onChange={(e) => {
-                            if (!isSorting) {
-                                setSelectedAlgorithm(e.target.value);
-                            }
-                        }}
-                        disabled={isSorting}
-                        className={`px-3 py-2 border rounded-md text-sm ${isDarkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black border-gray-300'}`}
-                    >
-                        {Object.values(ALGORITHMS).map((algo) => (
-                            <option key={algo} value={algo}>
-                                {algo}
-                            </option>
-                        ))}
-                    </select>
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={toggleSound}
-                            className={`${
-                                isSoundEnabled ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600'
-                            }`}
-                        >
-                            Sound {isSoundEnabled ? 'On' : 'Off'}
-                        </Button>
-                        {isSoundEnabled && (
-                            <select
-                                value={soundType}
-                                onChange={(e) => changeSoundType(e.target.value)}
-                                className={`px-3 py-2 border rounded-md text-sm ${
-                                    isDarkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black border-gray-300'
-                                }`}
-                            >
-                                {SOUND_TYPES.map((type) => (
-                                    <option key={type} value={type}>
-                                        {type.charAt(0).toUpperCase() + type.slice(1)} Sound
-                                    </option>
-                                ))}
-                            </select>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={cycleVisualizationMode}
-                            className="bg-indigo-500 hover:bg-indigo-600"
-                        >
-                            {visualizationMode}
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                const newMode = !isDarkMode;
-                                setIsDarkMode(newMode);
-                                onDarkModeChange?.(newMode);
-                            }}
-                            className={`${isDarkMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-800 hover:bg-gray-900'}`}
-                        >
-                            {isDarkMode ? '☀️' : '🌙'}
-                        </Button>
-                        <Button
-                            onClick={() => setIsDemoMode(!isDemoMode)}
-                            className="bg-purple-500 hover:bg-purple-600"
-                        >
-                            {isDemoMode ? 'Exit Demo' : 'Demo Mode'}
-                        </Button>
-                    </div>
-                </div>
-                <div className="flex flex-col gap-4 w-full sm:min-w-[300px]">
-                    {/* Size control */}
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm whitespace-nowrap">
-                            Size: {arraySize}
-                        </span>
-                        <input
-                            type="range"
-                            min={MIN_SIZE}
-                            max={MAX_SIZE}
-                            value={arraySize}
+                {/* Controls section */}
+                <div
+                    className={`mb-2 flex flex-col sm:flex-row gap-4 justify-between items-start controls-section ${
+                        !showControls ? 'controls-hidden' : ''
+                    }`}
+                >
+                    <div className="flex flex-wrap gap-2 sm:gap-4">
+                        <select
+                            value={selectedAlgorithm}
                             onChange={(e) => {
                                 if (!isSorting) {
-                                    setArraySize(parseInt(e.target.value));
+                                    setSelectedAlgorithm(e.target.value);
                                 }
                             }}
                             disabled={isSorting}
-                            className="w-full"
-                        />
-                    </div>
-                    {/* Speed control */}
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm whitespace-nowrap">
-                            Speed: {speed === MAX_SPEED ? 'Max' : `${Math.floor((speed/MAX_SPEED) * 100)}%`}
-                        </span>
-                        <input
-                            type="range"
-                            min={MIN_SPEED}
-                            max={MAX_SPEED}
-                            value={speed}
-                            onChange={(e) => setSpeed(parseInt(e.target.value))}
-                            disabled={isSorting && !isPaused.current}
-                            className="w-full"
-                        />
-                        <span className="text-sm text-gray-500">
-                            {calculateDelay(speed)}ms
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Action buttons section */}
-            <div className={`mb-4 flex flex-wrap gap-2 sm:gap-4 controls-section ${!showControls ? 'controls-hidden' : ''}`}>
-                <Button
-                    onClick={shuffleArray}
-                    disabled={isSorting}
-                    className="bg-yellow-500 hover:bg-yellow-600"
-                >
-                    Shuffle Array
-                </Button>
-                <Button
-                    onClick={startSort}
-                    disabled={(isSorting && !isPaused.current) || array.every((value, index) => value === createRainbowArray(arraySize)[index])}
-                    className="bg-green-500 hover:bg-green-600"
-                >
-                    Start {selectedAlgorithm}
-                </Button>
-                {isSorting && (
-                    <Button
-                        onClick={togglePause}
-                        className={isPaused.current ? "bg-blue-500 hover:bg-blue-600" : "bg-yellow-500 hover:bg-yellow-600"}
-                    >
-                        {pauseText}
-                    </Button>
-                )}
-            </div>
-
-            {/* Completion message */}
-            {isComplete && (
-                <div className="mb-2 text-center">
-                    <span className="bg-green-500 text-white px-4 py-2 rounded-md font-medium">
-                        Sorting Complete!
-                    </span>
-                </div>
-            )}
-
-            {/* Stats Panel */}
-            <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4 text-sm justify-center mx-auto max-w-2xl">
-                <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
-                    <div className="font-semibold">Sorted</div>
-                    <div>{stats.sortedPercentage}%</div>
-                </div>
-                <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
-                    <div className="font-semibold">Comparisons</div>
-                    <div>{stats.comparisons}</div>
-                </div>
-                <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
-                    <div className="font-semibold">Swaps</div>
-                    <div>{stats.swaps}</div>
-                </div>
-            </div>
-
-            {/* Visualization section */}
-            <div className={`h-48 sm:h-72 md:h-96 ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden`}>
-                {visualizationMode === VISUALIZATION_MODES.DISPARITY ? (
-                    <DisparityParticleSystem
-                        array={array}
-                        currentIndices={currentIndices}
-                    />
-                ) : visualizationMode === VISUALIZATION_MODES.SIZE_PARTICLE ? (
-                    <SizeParticleSystem
-                        array={array}
-                        currentIndices={currentIndices}
-                    />
-                ) : visualizationMode === VISUALIZATION_MODES.PARTICLE ? (
-                        <ParticleSystemVisualization
-                            array={array}
-                            currentIndices={currentIndices}
-                            getColor={getColor}
-                        />
-                    ) : visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
-                    // Radial visualization with thin bars
-                    <div className="w-full h-full relative transform-gpu">
-                        {array.map((value, idx) => (
-                            <div
-                                key={idx}
-                                style={getRadialBarStyles(idx, value, array.length)}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    // Bar/Mountain visualization
-                    <div className="w-full h-full flex items-end">
-                        {array.map((value, idx) => (
-                            <div
-                                key={idx}
-                                style={{
-                                    width: `${100 / arraySize}%`,
-                                    height: getHeight(value),
-                                    backgroundColor: getColor(value, idx),
-                                    display: 'inline-block',
-                                    transition: 'background-color 0.1s ease',
-                                    opacity: currentIndices.includes(idx) ? '0.7' : '1'
+                            className={`px-3 py-2 border rounded-md text-sm ${
+                                isDarkMode
+                                    ? 'bg-gray-800 text-white border-gray-600'
+                                    : 'bg-white text-black border-gray-300'
+                            }`}
+                        >
+                            {Object.values(ALGORITHMS).map((algo) => (
+                                <option key={algo} value={algo}>
+                                    {algo}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={toggleSound}
+                                className={`${
+                                    isSoundEnabled
+                                        ? 'bg-blue-500 hover:bg-blue-600'
+                                        : 'bg-gray-500 hover:bg-gray-600'
+                                }`}
+                            >
+                                Sound {isSoundEnabled ? 'On' : 'Off'}
+                            </Button>
+                            {isSoundEnabled && (
+                                <select
+                                    value={soundType}
+                                    onChange={(e) => changeSoundType(e.target.value)}
+                                    className={`px-3 py-2 border rounded-md text-sm ${
+                                        isDarkMode
+                                            ? 'bg-gray-800 text-white border-gray-600'
+                                            : 'bg-white text-black border-gray-300'
+                                    }`}
+                                >
+                                    {SOUND_TYPES.map((type) => (
+                                        <option key={type} value={type}>
+                                            {type.charAt(0).toUpperCase() + type.slice(1)} Sound
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={cycleVisualizationMode}
+                                className="bg-indigo-500 hover:bg-indigo-600"
+                            >
+                                {visualizationMode}
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    const newMode = !isDarkMode;
+                                    setIsDarkMode(newMode);
+                                    onDarkModeChange?.(newMode);
                                 }}
+                                className={`${
+                                    isDarkMode
+                                        ? 'bg-yellow-500 hover:bg-yellow-600'
+                                        : 'bg-gray-800 hover:bg-gray-900'
+                                }`}
+                            >
+                                {isDarkMode ? '☀️' : '🌙'}
+                            </Button>
+                            <Button
+                                onClick={() => setIsDemoMode(!isDemoMode)}
+                                className="bg-purple-500 hover:bg-purple-600"
+                            >
+                                {isDemoMode ? 'Exit Demo' : 'Demo Mode'}
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-4 w-full sm:min-w-[300px]">
+                        {/* Size control */}
+                        <div className="flex items-center gap-4">
+              <span className="text-sm whitespace-nowrap">
+                Size: {arraySize}
+              </span>
+                            <input
+                                type="range"
+                                min={MIN_SIZE}
+                                max={MAX_SIZE}
+                                value={arraySize}
+                                onChange={(e) => {
+                                    if (!isSorting) {
+                                        setArraySize(parseInt(e.target.value));
+                                    }
+                                }}
+                                disabled={isSorting}
+                                className="w-full"
                             />
-                        ))}
+                        </div>
+                        {/* Speed control */}
+                        <div className="flex items-center gap-4">
+              <span className="text-sm whitespace-nowrap">
+                Speed: {speed === MAX_SPEED ? 'Max' : `${Math.floor((speed / MAX_SPEED) * 100)}%`}
+              </span>
+                            <input
+                                type="range"
+                                min={MIN_SPEED}
+                                max={MAX_SPEED}
+                                value={speed}
+                                onChange={(e) => setSpeed(parseInt(e.target.value))}
+                                disabled={isSorting && !isPaused.current}
+                                className="w-full"
+                            />
+                            <span className="text-sm text-gray-500">
+                {calculateDelay(speed)}ms
+              </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action buttons section */}
+                <div className={`mb-4 flex flex-wrap gap-2 sm:gap-4 controls-section ${!showControls ? 'controls-hidden' : ''}`}>
+                    <Button
+                        onClick={shuffleArray}
+                        disabled={isSorting}
+                        className="bg-yellow-500 hover:bg-yellow-600"
+                    >
+                        Shuffle Array
+                    </Button>
+                    <Button
+                        onClick={startSort}
+                        disabled={
+                            (isSorting && !isPaused.current) ||
+                            array.every((value, index) => value === createRainbowArray(arraySize)[index])
+                        }
+                        className="bg-green-500 hover:bg-green-600"
+                    >
+                        Start {selectedAlgorithm}
+                    </Button>
+                    {isSorting && (
+                        <Button
+                            onClick={togglePause}
+                            className={isPaused.current ? 'bg-blue-500 hover:bg-blue-600' : 'bg-yellow-500 hover:bg-yellow-600'}
+                        >
+                            {pauseText}
+                        </Button>
+                    )}
+                </div>
+
+                {/* Completion message */}
+                {isComplete && (
+                    <div className="mb-2 text-center">
+            <span className="bg-green-500 text-white px-4 py-2 rounded-md font-medium">
+              Sorting Complete!
+            </span>
                     </div>
                 )}
-            </div>
+
+                {/* Stats Panel */}
+                <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4 text-sm justify-center mx-auto max-w-2xl">
+                    <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
+                        <div className="font-semibold">Sorted</div>
+                        <div>{stats.sortedPercentage}%</div>
+                    </div>
+                    <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
+                        <div className="font-semibold">Comparisons</div>
+                        <div>{stats.comparisons}</div>
+                    </div>
+                    <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
+                        <div className="font-semibold">Swaps</div>
+                        <div>{stats.swaps}</div>
+                    </div>
+                </div>
+
+                {/* Visualization section */}
+                <div className={`h-48 sm:h-72 md:h-96 ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden`}>
+                    {visualizationMode === VISUALIZATION_MODES.DISPARITY ? (
+                        <DisparityParticleSystem array={array} currentIndices={currentIndices} />
+                    ) : visualizationMode === VISUALIZATION_MODES.SIZE_PARTICLE ? (
+                        <SizeParticleSystem array={array} currentIndices={currentIndices} />
+                    ) : visualizationMode === VISUALIZATION_MODES.PARTICLE ? (
+                        <ParticleSystemVisualization array={array} currentIndices={currentIndices} getColor={getColor} />
+                    ) : visualizationMode === VISUALIZATION_MODES.CIRCLE ? (
+                        // Radial visualization with thin bars
+                        <div className="w-full h-full relative transform-gpu">
+                            {array.map((value, idx) => (
+                                <div key={idx} style={getRadialBarStyles(idx, value, array.length)} />
+                            ))}
+                        </div>
+                    ) : (
+                        // Bar/Mountain visualization
+                        <div className="w-full h-full flex items-end">
+                            {array.map((value, idx) => (
+                                <div
+                                    key={idx}
+                                    style={{
+                                        width: `${100 / arraySize}%`,
+                                        height: getHeight(value),
+                                        backgroundColor: getColor(value, idx),
+                                        display: 'inline-block',
+                                        transition: 'background-color 0.1s ease',
+                                        opacity: currentIndices.includes(idx) ? '0.7' : '1'
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
