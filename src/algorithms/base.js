@@ -5,6 +5,7 @@ export class SortingAlgorithm {
         this.onStep = config.onStep || (() => {});
         this.onCompare = config.onCompare || (() => {});
         this.onSwap = config.onSwap || (() => {});
+        this.soundEnabled = config.soundEnabled || false;
     }
 
     async sleep() {

@@ -150,11 +150,35 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                     sortedPercentage: calculateSortedPercentage(newArray)
                 }));
             },
-            onCompare: (i, j) => {
+            onCompare: (i, j, type = 'compare', progress) => {
                 setCurrentIndices([i, j]);
                 // Only use general audio manager for non-RadixSort algorithms
                 if (selectedAlgorithm !== ALGORITHMS.RADIX_SORT && i >= 0 && i < array.length) {
-                    audioManager.current.playNote(array[i], array.length, 'compare');
+                    if (type === 'mergeProgress' && progress !== undefined) {
+                        // Update merge sound frequency based on progress
+                        const frequency = audioManager.current.calculateFrequency(
+                            Math.floor(progress * array.length),
+                            array.length
+                        );
+                        if (audioManager.current.mergeOscillators) {
+                            const now = audioManager.current.audioContext.currentTime;
+                            audioManager.current.mergeOscillators.forEach((osc, idx) => {
+                                osc.frequency.setValueAtTime(frequency * (idx === 0 ? 1 : 1.5), now);
+                            });
+                        }
+                    } else if (type === 'mergeEnd') {
+                        // Stop merge sound
+                        if (audioManager.current.mergeGains) {
+                            const now = audioManager.current.audioContext.currentTime;
+                            audioManager.current.mergeGains.forEach(gain => {
+                                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                            });
+                            audioManager.current.mergeOscillators = null;
+                            audioManager.current.mergeGains = null;
+                        }
+                    } else {
+                        audioManager.current.playNote(array[i], array.length, type);
+                    }
                 }
                 setStats(prev => ({
                     ...prev,
