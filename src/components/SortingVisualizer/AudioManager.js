@@ -133,9 +133,27 @@ export default class AudioManager {
                         oscillator.frequency.setValueAtTime(frequency * 1.25, this.audioContext.currentTime);
                         break;
                     case 'merge':
+                        // If we already have merge oscillators, clean them up first
+                        if (this.mergeOscillators) {
+                            this.mergeOscillators.forEach(osc => {
+                                try {
+                                    osc.stop();
+                                    osc.disconnect();
+                                } catch (e) {
+                                    // Ignore cleanup errors
+                                }
+                            });
+                            this.mergeGains?.forEach(gain => {
+                                try {
+                                    gain.disconnect();
+                                } catch (e) {
+                                    // Ignore cleanup errors
+                                }
+                            });
+                        }
+
                         oscillator.type = 'sine';
                         this.smoothStart(gainNode, 0.15);
-                        // Don't stop the sound immediately - it will be stopped when merge completes
                         const startFreq = frequency * 0.5;
                         oscillator.frequency.setValueAtTime(startFreq, this.audioContext.currentTime);
                         
@@ -147,12 +165,19 @@ export default class AudioManager {
                         this.smoothStart(gain2, 0.08);
                         osc2.connect(gain2);
                         osc2.start();
-                        
+
                         // Store the oscillators and gains for later frequency updates
                         this.mergeOscillators = [oscillator, osc2];
                         this.mergeGains = [gainNode, gain2];
                         this.activeNodes.add(osc2);
                         this.activeNodes.add(gain2);
+
+                        // Set a timeout to clean up if mergeEnd is not called
+                        setTimeout(() => {
+                            if (this.mergeOscillators?.includes(oscillator)) {
+                                this.onCompare(0, 0, 'mergeEnd');
+                            }
+                        }, 5000); // 5 second safety timeout
                         break;
                 }
             } else if (this.soundType === 'ambient') {
