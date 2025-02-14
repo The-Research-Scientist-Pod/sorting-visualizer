@@ -54,12 +54,12 @@ export class MergeSort extends SortingAlgorithm {
         let j = 0;
         let k = left;
 
-        // Start merge sound sequence
+        // Merge temp arrays back into array[left..right]
+        // Play merge sound at start of merge
         if (this.onCompare) {
             this.onCompare(left, right, 'merge');
+            await new Promise(resolve => setTimeout(resolve, this.delay));
         }
-
-        // Merge temp arrays back into array[left..right]
         while (i < n1 && j < n2) {
             await this.checkState();
             await new Promise(resolve => setTimeout(resolve, this.delay));
@@ -72,8 +72,12 @@ export class MergeSort extends SortingAlgorithm {
                 j++;
             }
 
-            // Visualize the placement of element
+            // Visualize the placement of element and play merge sound
             this.onStep?.(array);
+            // Play merge sound periodically during merge
+            if (k % 3 === 0 && this.onCompare) {
+                this.onCompare(k, k, 'merge');
+            }
             k++;
         }
 
