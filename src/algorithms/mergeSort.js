@@ -70,10 +70,11 @@ export class MergeSort extends SortingAlgorithm {
                 j++;
             }
 
-            // Visualize the placement of element and play merge sound
+            // Visualize the placement of element
             this.onStep?.(array);
-            if (this.onCompare) {
-                this.onCompare(k, k, 'merge'); // Use same index to trigger merge sound
+            // Play merge sound every few elements to create a sweeping effect
+            if (this.onCompare && k % 3 === 0) {
+                this.onCompare(k, k, 'merge');
             }
             k++;
         }
