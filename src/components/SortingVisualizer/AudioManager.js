@@ -134,13 +134,15 @@ export default class AudioManager {
                         break;
                     case 'merge':
                         oscillator.type = 'sine';
-                        this.smoothStart(gainNode, 0.2);
-                        this.smoothStop(gainNode, 0.4);
-                        // Faster, more dramatic frequency sweep
-                        oscillator.frequency.setValueAtTime(frequency * 0.5, this.audioContext.currentTime);
+                        this.smoothStart(gainNode, 0.15);
+                        this.smoothStop(gainNode, 1.0);
+                        // Longer, more dramatic frequency sweep for merge operation
+                        const startFreq = frequency * 0.25;
+                        const endFreq = frequency * 3;
+                        oscillator.frequency.setValueAtTime(startFreq, this.audioContext.currentTime);
                         oscillator.frequency.exponentialRampToValueAtTime(
-                            frequency * 2,
-                            this.audioContext.currentTime + 0.4
+                            endFreq,
+                            this.audioContext.currentTime + 1.0
                         );
                         break;
                 }
