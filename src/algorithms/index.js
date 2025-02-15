@@ -20,4 +20,10 @@ export { DualPivotQuickSort } from './dualPivotQuickSort';
 export { StoogeSort } from './stoogeSort';
 export { OddEvenSort } from './oddEvenSort'
 export { PigeonholeSort } from './pigeonholeSort'
+export { BottomUpMergeSort } from './bottomUpMergeSort';
+export { InPlaceMergeSort } from './inPlaceMergeSort';
+export { NaturalMergeSort } from './naturalMergeSort';
+export { WikiSort } from './WikiSort';
+export { ParallelMergeSort } from './ParallelMergeSort';
+export { AdaptiveMergeSort } from './AdaptiveMergeSort';
 // Export additional algorithms as they're implemented

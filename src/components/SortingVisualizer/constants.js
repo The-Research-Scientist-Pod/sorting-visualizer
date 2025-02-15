@@ -27,6 +27,12 @@ export const ALGORITHMS = {
     ODD_EVEN_SORT: 'Odd Even Sort',
     PIGEONHOLE_SORT: 'Pigeonhole Sort',
     STALIN_SORT: 'Stalin Sort',
+    BOTTOM_UP_MERGE_SORT: 'Bottom Up Merge Sort',
+    IN_PLACE_MERGE_SORT: 'In Place Merge Sort',
+    NATURAL_MERGE_SORT: 'Natural Merge Sort',
+    WIKISORT: 'WikiSort',
+    PARALLEL_MERGE_SORT: 'Parallel Merge Sort',
+    ADAPTIVE_MERGE_SORT: 'Adaptive Merge Sort',
 };
 
 export const BUTTON_STATES = {
