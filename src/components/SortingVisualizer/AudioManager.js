@@ -11,6 +11,7 @@ export default class AudioManager {
         this.activeNodes = new Set();
         this.mergeOscillators = null;
         this.mergeGains = null;
+        this.currentMergeGainValue = 0;
     }
 
     initialize() {
@@ -38,7 +39,7 @@ export default class AudioManager {
                 if (node.gain) {
                     node.gain.cancelScheduledValues(now);
                     node.gain.setValueAtTime(node.gain.value, now);
-                    node.gain.linearRampToValueAtTime(0, now + 0.001);
+                    node.gain.linearRampToValueAtTime(0.0001, now + 0.01);
                 }
                 setTimeout(() => {
                     try {
@@ -46,9 +47,9 @@ export default class AudioManager {
                     } catch (e) {
                         // Ignore disconnection errors
                     }
-                }, 10);
+                }, 20);
             } catch (e) {
-                // Ignore any cleanup errors
+                // Ignore cleanup errors
             }
         }
         this.activeNodes.clear();
@@ -59,19 +60,22 @@ export default class AudioManager {
         if (!Number.isFinite(value) || !Number.isFinite(arraySize) || arraySize <= 0) {
             return this.minFreq;
         }
-
         const normalizedValue = Math.max(1, Math.min(value, arraySize));
-        const baseFreq = this.minFreq + ((normalizedValue - 1) / (arraySize - 1)) * (this.maxFreq - this.minFreq);
-        const pitchMultiplier = 0.5 + (value / arraySize);
+        const baseFreq =
+            this.minFreq +
+            ((normalizedValue - 1) / (arraySize - 1)) *
+            (this.maxFreq - this.minFreq);
+        const pitchMultiplier = 0.5 + value / arraySize;
         const frequency = baseFreq * pitchMultiplier;
-        const clampedFreq = Math.min(Math.max(frequency, this.minFreq), this.maxFreq * 2);
-
+        const clampedFreq = Math.min(
+            Math.max(frequency, this.minFreq),
+            this.maxFreq * 2
+        );
         return Number.isFinite(clampedFreq) ? clampedFreq : this.minFreq;
     }
 
     setSoundType(type) {
         this.soundType = type;
-        // Clean up any ongoing sounds when changing type
         this.cleanupMergeSounds();
     }
 
@@ -82,16 +86,34 @@ export default class AudioManager {
         return gainNode;
     }
 
-    smoothStart(gainNode, initialValue, time = 0.002) {
+    smoothStart(gainNode, initialValue, time = 0.02) {
         const now = this.audioContext.currentTime;
         gainNode.gain.cancelScheduledValues(now);
-        gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(initialValue, now + time);
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(initialValue, now + time);
     }
 
-    smoothStop(gainNode, duration) {
+    smoothStop(gainNode, duration = 0.1) {
         const now = this.audioContext.currentTime;
-        gainNode.gain.linearRampToValueAtTime(0.001, now + duration);
+        gainNode.gain.cancelScheduledValues(now);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    }
+
+    smoothMergeStart(gainNode, targetValue, time = 0.05) {
+        const now = this.audioContext.currentTime;
+        gainNode.gain.cancelScheduledValues(now);
+        const startValue = Math.max(0.0001, this.currentMergeGainValue);
+        gainNode.gain.setValueAtTime(startValue, now);
+        gainNode.gain.exponentialRampToValueAtTime(targetValue, now + time);
+        this.currentMergeGainValue = targetValue;
+    }
+
+    smoothMergeStop(gainNode, duration = 0.1) {
+        const now = this.audioContext.currentTime;
+        gainNode.gain.cancelScheduledValues(now);
+        gainNode.gain.setValueAtTime(this.currentMergeGainValue, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        this.currentMergeGainValue = 0.0001;
     }
 
     shouldPlayNote() {
@@ -106,48 +128,52 @@ export default class AudioManager {
     cleanupMergeSounds() {
         if (this.mergeGains) {
             const now = this.audioContext.currentTime;
-            this.mergeGains.forEach(gain => {
+            this.mergeGains.forEach((gain) => {
                 try {
-                    gain.gain.cancelScheduledValues(now);
-                    gain.gain.setValueAtTime(gain.gain.value, now);
-                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                    this.smoothMergeStop(gain, 0.1);
                 } catch (e) {
                     // Ignore cleanup errors
                 }
             });
 
-            // Clear references after a short delay
             setTimeout(() => {
                 if (this.mergeOscillators) {
-                    this.mergeOscillators.forEach(osc => {
+                    this.mergeOscillators.forEach((osc) => {
                         try {
-                            osc.stop();
+                            osc.stop(now + 0.15);
                             osc.disconnect();
                             this.activeNodes.delete(osc);
                         } catch (e) {
-                            // Ignore cleanup errors
+                            // Ignore errors
                         }
                     });
                 }
                 if (this.mergeGains) {
-                    this.mergeGains.forEach(gain => {
+                    this.mergeGains.forEach((gain) => {
                         try {
                             gain.disconnect();
                             this.activeNodes.delete(gain);
                         } catch (e) {
-                            // Ignore cleanup errors
+                            // Ignore errors
                         }
                     });
                 }
                 this.mergeOscillators = null;
                 this.mergeGains = null;
+                this.currentMergeGainValue = 0;
             }, 200);
         }
     }
 
     playNote(value, arraySize, type = 'compare') {
         if (!this.isEnabled || !this.audioContext) return;
-        if (!this.shouldPlayNote() && type !== 'mergeProgress' && type !== 'merge' && type !== 'mergeEnd') return;
+        if (
+            !this.shouldPlayNote() &&
+            type !== 'mergeProgress' &&
+            type !== 'merge' &&
+            type !== 'mergeEnd'
+        )
+            return;
 
         try {
             if (type === 'mergeEnd') {
@@ -168,7 +194,7 @@ export default class AudioManager {
                         oscillator = this.audioContext.createOscillator();
                         gainNode = this.createSmoothGain();
                         oscillator.type = 'sine';
-                        this.smoothStart(gainNode, 0.15);
+                        this.smoothMergeStart(gainNode, 0.15);
 
                         startFreq = frequency * 0.5;
                         oscillator.frequency.setValueAtTime(startFreq, now);
@@ -177,7 +203,7 @@ export default class AudioManager {
                         gain2 = this.createSmoothGain();
                         osc2.type = 'sine';
                         osc2.frequency.setValueAtTime(startFreq * 1.5, now);
-                        this.smoothStart(gain2, 0.08);
+                        this.smoothMergeStart(gain2, 0.08);
 
                         oscillator.connect(gainNode);
                         osc2.connect(gain2);
@@ -200,7 +226,7 @@ export default class AudioManager {
 
                         oscillator.type = 'sine';
                         oscillator.frequency.setValueAtTime(startFreq, now);
-                        this.smoothStart(gainNode, 0.1, 0.05);
+                        this.smoothMergeStart(gainNode, 0.1);
 
                         oscillator.connect(gainNode);
                         oscillator.start();
@@ -223,7 +249,7 @@ export default class AudioManager {
                         filter.Q.value = 1;
 
                         oscillator.frequency.setValueAtTime(startFreq, now);
-                        this.smoothStart(gainNode, 0.1);
+                        this.smoothMergeStart(gainNode, 0.1);
 
                         oscillator.connect(gainNode);
                         gainNode.connect(filter);
@@ -252,7 +278,7 @@ export default class AudioManager {
                         modulator.frequency.setValueAtTime(startFreq * 0.25, now);
                         modGain.gain.setValueAtTime(150, now);
 
-                        this.smoothStart(gainNode, 0.1, 0.05);
+                        this.smoothMergeStart(gainNode, 0.1);
 
                         modulator.connect(modGain);
                         modGain.connect(oscillator.frequency);
@@ -269,40 +295,44 @@ export default class AudioManager {
                         this.activeNodes.add(modGain);
                         break;
                 }
-
-                // Set safety timeout for all sound types
-                setTimeout(() => {
-                    if (this.mergeOscillators?.includes(oscillator)) {
-                        this.cleanupMergeSounds();
-                    }
-                }, 5000);
                 return;
             }
 
             if (type === 'mergeProgress' && this.mergeOscillators) {
                 const now = this.audioContext.currentTime;
                 const progress = Math.max(0, Math.min(1, value));
-
                 let baseFreq = this.minFreq + (this.maxFreq - this.minFreq) * progress;
 
                 switch (this.soundType) {
                     case 'electronic':
                         this.mergeOscillators.forEach((osc, idx) => {
-                            osc.frequency.setValueAtTime(baseFreq * (idx === 0 ? 1 : 1.5), now);
+                            osc.frequency.linearRampToValueAtTime(
+                                baseFreq * (idx === 0 ? 1 : 1.5),
+                                now + 0.016
+                            );
                         });
                         break;
-
                     case 'ambient':
-                        this.mergeOscillators[0].frequency.setValueAtTime(baseFreq * 0.5, now);
+                        this.mergeOscillators[0].frequency.linearRampToValueAtTime(
+                            baseFreq * 0.5,
+                            now + 0.016
+                        );
                         break;
-
                     case 'retro':
-                        this.mergeOscillators[0].frequency.setValueAtTime(baseFreq * 0.25, now);
+                        this.mergeOscillators[0].frequency.linearRampToValueAtTime(
+                            baseFreq * 0.25,
+                            now + 0.016
+                        );
                         break;
-
                     case 'crystal':
-                        this.mergeOscillators[0].frequency.setValueAtTime(baseFreq * 0.75, now);
-                        this.mergeOscillators[1].frequency.setValueAtTime(baseFreq * 0.25, now);
+                        this.mergeOscillators[0].frequency.linearRampToValueAtTime(
+                            baseFreq * 0.75,
+                            now + 0.016
+                        );
+                        this.mergeOscillators[1].frequency.linearRampToValueAtTime(
+                            baseFreq * 0.25,
+                            now + 0.016
+                        );
                         break;
                 }
                 return;
@@ -316,7 +346,6 @@ export default class AudioManager {
             let filter;
             let modulator;
             let modGain;
-            // Removed unused 'baseFreq' declaration here
 
             switch (this.soundType) {
                 case 'electronic':
@@ -381,12 +410,10 @@ export default class AudioManager {
                     filter.frequency.value = frequency;
                     filter.Q.value = 1;
                     this.activeNodes.add(filter);
-
                     oscillator.connect(gainNode);
                     gainNode.disconnect();
                     gainNode.connect(filter);
                     filter.connect(this.masterGain);
-
                     switch (type) {
                         case 'compare':
                             oscillator.frequency.setValueAtTime(frequency * 0.25, now);
@@ -404,7 +431,6 @@ export default class AudioManager {
                             duration = 0.12;
                             break;
                     }
-
                     setTimeout(() => this.activeNodes.delete(filter), duration * 1000 + 100);
                     break;
 
@@ -414,7 +440,6 @@ export default class AudioManager {
                     modGain = this.audioContext.createGain();
                     this.activeNodes.add(modulator);
                     this.activeNodes.add(modGain);
-
                     switch (type) {
                         case 'compare':
                             oscillator.frequency.setValueAtTime(frequency * 2, now);
@@ -438,12 +463,10 @@ export default class AudioManager {
                             duration = 0.25;
                             break;
                     }
-
                     modulator.connect(modGain);
                     modGain.connect(oscillator.frequency);
                     modulator.start();
                     modulator.stop(now + duration);
-
                     setTimeout(() => {
                         this.activeNodes.delete(modulator);
                         this.activeNodes.delete(modGain);
@@ -454,16 +477,13 @@ export default class AudioManager {
             if (this.soundType !== 'retro') {
                 oscillator.connect(gainNode);
             }
-
             oscillator.start();
             this.smoothStop(gainNode, duration);
-            oscillator.stop(now + duration);
-
+            oscillator.stop(now + duration + 0.05);
             setTimeout(() => {
                 this.activeNodes.delete(oscillator);
                 this.activeNodes.delete(gainNode);
             }, duration * 1000 + 100);
-
         } catch (error) {
             console.error('Error playing note:', error);
         }
@@ -471,38 +491,49 @@ export default class AudioManager {
 
     playCompletion() {
         if (!this.isEnabled || !this.audioContext) return;
-
         try {
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.createSmoothGain();
             this.activeNodes.add(oscillator);
-
             switch (this.soundType) {
                 case 'electronic': {
                     const duration = 0.3;
                     oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(440, this.audioContext.currentTime);
-                    oscillator.frequency.exponentialRampToValueAtTime(880, this.audioContext.currentTime + 0.2);
+                    oscillator.frequency.setValueAtTime(
+                        440,
+                        this.audioContext.currentTime
+                    );
+                    oscillator.frequency.exponentialRampToValueAtTime(
+                        880,
+                        this.audioContext.currentTime + 0.2
+                    );
                     this.smoothStart(gainNode, 0.3);
                     this.smoothStop(gainNode, duration);
                     oscillator.start();
                     oscillator.stop(this.audioContext.currentTime + duration);
                     break;
                 }
-
                 case 'ambient': {
                     const duration = 0.8;
                     oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(220, this.audioContext.currentTime);
-                    oscillator.frequency.exponentialRampToValueAtTime(440, this.audioContext.currentTime + 0.5);
+                    oscillator.frequency.setValueAtTime(
+                        220,
+                        this.audioContext.currentTime
+                    );
+                    oscillator.frequency.exponentialRampToValueAtTime(
+                        440,
+                        this.audioContext.currentTime + 0.5
+                    );
                     this.smoothStart(gainNode, 0.1, 0.05);
-                    gainNode.gain.exponentialRampToValueAtTime(0.2, this.audioContext.currentTime + 0.3);
+                    gainNode.gain.exponentialRampToValueAtTime(
+                        0.2,
+                        this.audioContext.currentTime + 0.3
+                    );
                     this.smoothStop(gainNode, duration);
                     oscillator.start();
                     oscillator.stop(this.audioContext.currentTime + duration);
                     break;
                 }
-
                 case 'retro': {
                     const duration = 0.3;
                     oscillator.type = 'square';
@@ -510,50 +541,55 @@ export default class AudioManager {
                     filter.type = 'lowpass';
                     filter.frequency.value = 2000;
                     filter.Q.value = 1;
-
                     this.activeNodes.add(filter);
-
                     oscillator.connect(gainNode);
                     gainNode.disconnect();
                     gainNode.connect(filter);
                     filter.connect(this.masterGain);
-
-                    oscillator.frequency.setValueAtTime(440, this.audioContext.currentTime);
-                    oscillator.frequency.setValueAtTime(880, this.audioContext.currentTime + 0.1);
-                    oscillator.frequency.setValueAtTime(1320, this.audioContext.currentTime + 0.2);
+                    oscillator.frequency.setValueAtTime(
+                        440,
+                        this.audioContext.currentTime
+                    );
+                    oscillator.frequency.setValueAtTime(
+                        880,
+                        this.audioContext.currentTime + 0.1
+                    );
+                    oscillator.frequency.setValueAtTime(
+                        1320,
+                        this.audioContext.currentTime + 0.2
+                    );
                     this.smoothStart(gainNode, 0.2);
                     this.smoothStop(gainNode, duration);
                     oscillator.start();
                     oscillator.stop(this.audioContext.currentTime + duration);
-
                     setTimeout(() => this.activeNodes.delete(filter), duration * 1000 + 100);
                     break;
                 }
-
                 case 'crystal': {
                     const duration = 0.5;
                     const modulator = this.audioContext.createOscillator();
                     const modGain = this.audioContext.createGain();
-
                     this.activeNodes.add(modulator);
                     this.activeNodes.add(modGain);
-
                     oscillator.type = 'sine';
                     modulator.type = 'sine';
-
-                    oscillator.frequency.setValueAtTime(880, this.audioContext.currentTime);
-                    modulator.frequency.setValueAtTime(440, this.audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(
+                        880,
+                        this.audioContext.currentTime
+                    );
+                    modulator.frequency.setValueAtTime(
+                        440,
+                        this.audioContext.currentTime
+                    );
                     modGain.gain.setValueAtTime(200, this.audioContext.currentTime);
                     this.smoothStart(gainNode, 0.2, 0.01);
                     this.smoothStop(gainNode, duration);
-
                     modulator.connect(modGain);
                     modGain.connect(oscillator.frequency);
                     modulator.start();
                     oscillator.start();
                     modulator.stop(this.audioContext.currentTime + duration);
                     oscillator.stop(this.audioContext.currentTime + duration);
-
                     setTimeout(() => {
                         this.activeNodes.delete(modulator);
                         this.activeNodes.delete(modGain);
@@ -561,16 +597,16 @@ export default class AudioManager {
                     break;
                 }
             }
-
-            // Common cleanup
-            const duration = this.soundType === 'ambient' ? 0.8 :
-                this.soundType === 'crystal' ? 0.5 : 0.3;
-
+            const duration =
+                this.soundType === 'ambient'
+                    ? 0.8
+                    : this.soundType === 'crystal'
+                        ? 0.5
+                        : 0.3;
             setTimeout(() => {
                 this.activeNodes.delete(oscillator);
                 this.activeNodes.delete(gainNode);
             }, duration * 1000 + 100);
-
         } catch (error) {
             console.error('Error playing completion sound:', error);
         }
