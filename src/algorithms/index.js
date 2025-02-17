@@ -26,4 +26,10 @@ export { NaturalMergeSort } from './naturalMergeSort';
 export { WikiSort } from './WikiSort';
 export { ParallelMergeSort } from './ParallelMergeSort';
 export { AdaptiveMergeSort } from './AdaptiveMergeSort';
+export { ClassicQuickSort } from './classicQuickSort.js';
+export { MedianQuickSort } from './medianQuickSort.js';
+export { RandomQuickSort } from './randomQuickSort.js';
+export { BlockQuickSort } from './blockQuickSort.js';
+export { IterativeQuickSort } from './iterativeQuickSort.js';
+export { BitonicSort } from './bitonicSort.js';
 // Export additional algorithms as they're implemented

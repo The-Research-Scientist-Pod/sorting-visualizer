@@ -535,13 +535,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                 </div>
 
                 {/* Completion message */}
-                {isComplete && (
-                    <div className="mb-2 text-center">
-            <span className="bg-green-500 text-white px-4 py-2 rounded-md font-medium">
-              Sorting Complete!
-            </span>
-                    </div>
-                )}
 
                 {/* Stats Panel */}
                 <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4 text-sm justify-center mx-auto max-w-2xl">

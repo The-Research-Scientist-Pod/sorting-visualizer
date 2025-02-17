@@ -1,5 +1,3 @@
-// oddEvenSort.js
-
 class OddEvenSort {
     constructor(config) {
         this.delay = config.delay;
@@ -23,41 +21,62 @@ class OddEvenSort {
         return new Promise(resolve => setTimeout(resolve, this.delay));
     }
 
-    async compareAndSwap(array, i, j) {
-        await this.sleep();
+    async compare(array, i, j) {
         this.onCompare(i, j);
+        await this.sleep();
+    }
 
-        if (array[i] > array[j]) {
+    async swap(array, i, j) {
+        if (i !== j) {
             [array[i], array[j]] = [array[j], array[i]];
             this.onSwap([...array]);
-            return true;
+            await this.sleep();
         }
-        return false;
+    }
+
+    async compareAndSwap(array, i) {
+        await this.compare(array, i, i + 1);
+        if (array[i] > array[i + 1]) {
+            await this.swap(array, i, i + 1);
+            return true; // Swap occurred
+        }
+        return false; // No swap needed
     }
 
     async sort(array) {
-        const n = array.length;
-        let sorted = false;
+        const arrayClone = [...array];
+        const n = arrayClone.length;
+        let isSorted = false;
 
-        while (!sorted) {
-            sorted = true;
+        while (!isSorted) {
+            isSorted = true;
 
             // Odd phase (1, 3, 5, ...)
             for (let i = 1; i < n - 1; i += 2) {
-                if (await this.compareAndSwap(array, i, i + 1)) {
-                    sorted = false;
+                if (await this.compareAndSwap(arrayClone, i)) {
+                    isSorted = false;
                 }
             }
+
+            // Update visualization after odd phase
+            this.onStep([...arrayClone]);
+            await this.sleep();
 
             // Even phase (0, 2, 4, ...)
             for (let i = 0; i < n - 1; i += 2) {
-                if (await this.compareAndSwap(array, i, i + 1)) {
-                    sorted = false;
+                if (await this.compareAndSwap(arrayClone, i)) {
+                    isSorted = false;
                 }
             }
+
+            // Update visualization after even phase
+            this.onStep([...arrayClone]);
+            await this.sleep();
         }
 
-        return array;
+        // Final visualization update
+        this.onStep([...arrayClone]);
+        return arrayClone;
     }
 }
 
