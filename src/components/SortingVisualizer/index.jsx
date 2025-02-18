@@ -610,6 +610,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                             ))}
                         </div>
                     )}
+                    </div>
                 </div>
             </div>
         </div>
