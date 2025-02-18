@@ -401,7 +401,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                 </style>
                     {/* Controls section */}
                     <div className="p-4 space-y-4">
-                >
                     <div className="flex flex-wrap gap-2 sm:gap-4">
                         <select
                             value={selectedAlgorithm}
@@ -520,10 +519,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
               </span>
                         </div>
                     </div>
-                </div>
-
-                {/* Action buttons section */}
-                <div className={`mb-4 flex flex-wrap gap-2 sm:gap-4 controls-section ${!showControls ? 'controls-hidden' : ''}`}>
+                        {/* Action buttons section */}
+                        <div className="flex flex-wrap gap-2 sm:gap-4">
                     <Button
                         onClick={shuffleArray}
                         disabled={isSorting}
@@ -553,8 +550,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
 
                 {/* Completion message */}
 
-                {/* Stats Panel */}
-                <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4 text-sm justify-center mx-auto max-w-2xl">
+                        {/* Stats Panel */}
+                        <div className="grid grid-cols-3 gap-2 sm:gap-4 text-sm">
                     <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
                         <div className="font-semibold">Sorted</div>
                         <div>{stats.sortedPercentage}%</div>
