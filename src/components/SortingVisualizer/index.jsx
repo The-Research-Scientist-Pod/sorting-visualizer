@@ -359,7 +359,7 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
 
     return (
         <div
-            className={`relative w-full min-h-screen mx-auto ${
+            className={`p-2 sm:p-4 w-full min-h-screen mx-auto ${
                 isDemoMode
                     ? 'bg-black text-white'
                     : isDarkMode
@@ -367,40 +367,24 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                         : 'bg-white text-black'
             }`}
         >
-            <div className={`flex ${!isDemoMode && 'max-w-4xl mx-auto px-2 sm:px-0'}`}>
-                {/* Sidebar */}
-                <div 
-                    className={`${
-                        isDemoMode ? 'hidden' : 'fixed left-0 top-0 h-full bg-opacity-90'
-                    } ${
-                        isDarkMode ? 'bg-gray-800' : 'bg-white'
-                    } w-64 transform transition-transform duration-300 ease-in-out ${
-                        showControls ? 'translate-x-0' : '-translate-x-full'
-                    } z-50 overflow-y-auto`}
-                >
+            <div className="max-w-4xl mx-auto px-2 sm:px-0">
                 <style>
                     {`
             .controls-section {
-              transition: all 0.3s ease-in-out;
+              transition: opacity 0.3s ease-in-out;
             }
             .controls-hidden {
               opacity: 0;
               pointer-events: none;
             }
-            .demo-overlay {
-              position: absolute;
-              top: 16px;
-              left: 16px;
-              color: rgba(255, 255, 255, 0.7);
-              font-size: 14px;
-              z-index: 40;
-              pointer-events: none;
-              text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-            }
           `}
                 </style>
-                    {/* Controls section */}
-                    <div className="p-4 space-y-4">
+                {/* Controls section */}
+                <div
+                    className={`mb-2 flex flex-col sm:flex-row gap-4 justify-between items-start controls-section ${
+                        !showControls ? 'controls-hidden' : ''
+                    }`}
+                >
                     <div className="flex flex-wrap gap-2 sm:gap-4">
                         <select
                             value={selectedAlgorithm}
@@ -519,8 +503,10 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
               </span>
                         </div>
                     </div>
-                        {/* Action buttons section */}
-                        <div className="flex flex-wrap gap-2 sm:gap-4">
+                </div>
+
+                {/* Action buttons section */}
+                <div className={`mb-4 flex flex-wrap gap-2 sm:gap-4 controls-section ${!showControls ? 'controls-hidden' : ''}`}>
                     <Button
                         onClick={shuffleArray}
                         disabled={isSorting}
@@ -550,8 +536,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
 
                 {/* Completion message */}
 
-                        {/* Stats Panel */}
-                        <div className="grid grid-cols-3 gap-2 sm:gap-4 text-sm">
+                {/* Stats Panel */}
+                <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4 text-sm justify-center mx-auto max-w-2xl">
                     <div className={`p-2 rounded ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'}`}>
                         <div className="font-semibold">Sorted</div>
                         <div>{stats.sortedPercentage}%</div>
@@ -566,19 +552,8 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                     </div>
                 </div>
 
-                </div>
-                {/* Main content */}
-                <div className={`flex-1 ${!isDemoMode && 'ml-64'}`}>
-                    {/* Demo mode overlay */}
-                    {isDemoMode && (
-                        <div className="demo-overlay">
-                            <div>{selectedAlgorithm}</div>
-                            <div>Size: {arraySize}</div>
-                            <div>Speed: {speed === MAX_SPEED ? 'Max' : `${Math.floor((speed / MAX_SPEED) * 100)}%`}</div>
-                        </div>
-                    )}
-                    {/* Visualization section */}
-                    <div className={`h-screen ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden`}>
+                {/* Visualization section */}
+                <div className={`h-48 sm:h-72 md:h-96 ${isDemoMode ? 'bg-black' : isDarkMode ? 'bg-black' : 'bg-gray-100'} relative overflow-hidden`}>
                     {visualizationMode === VISUALIZATION_MODES.DISPARITY ? (
                         <DisparityParticleSystem array={array} currentIndices={currentIndices} />
                     ) : visualizationMode === VISUALIZATION_MODES.SIZE_PARTICLE ? (
@@ -610,7 +585,6 @@ const SortingVisualizer = ({ onDarkModeChange }) => {
                             ))}
                         </div>
                     )}
-                    </div>
                 </div>
             </div>
         </div>

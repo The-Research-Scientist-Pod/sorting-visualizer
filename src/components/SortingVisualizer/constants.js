@@ -6,6 +6,8 @@ export const DEFAULT_SPEED = 50;
 export const ALGORITHMS = {
     BUBBLE_SORT: 'Bubble Sort',
     BITONIC_SORT: 'Bitonic Sort',
+    BATCHER_SORT: 'Batcher Sort',
+    LIBRARY_SORT: 'Library Sort',
     QUICK_SORT: 'Quick Sort',
     CLASSIC_QUICK_SORT: 'Classic Quick Sort',
     MEDIAN_QUICK_SORT: 'Median Quick Sort',

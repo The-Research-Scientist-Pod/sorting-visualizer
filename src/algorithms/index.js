@@ -32,4 +32,6 @@ export { RandomQuickSort } from './randomQuickSort.js';
 export { BlockQuickSort } from './blockQuickSort.js';
 export { IterativeQuickSort } from './iterativeQuickSort.js';
 export { BitonicSort } from './bitonicSort.js';
+export { BatcherSort } from './batcherSort.js';
+export { LibrarySort } from './librarySort.js';
 // Export additional algorithms as they're implemented
